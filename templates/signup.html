@@ -1,0 +1,48 @@
+{% extends '_base.html' %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+	<h2>Create account</h2>
+	{% with messages = get_flashed_messages(with_categories=true) %}
+		{% if messages %}
+			<ul class="flashes">
+				{% for category, message in messages %}
+					<li class="flash {{ category }}">{{ message }}</li>
+				{% endfor %}
+			</ul>
+		{% endif %}
+	{% endwith %}
+
+	<form method="POST" action="{{ url_for('signup') }}">
+		{{ form.hidden_tag() }}
+		<div class="form-group">
+			{{ form.email.label }}
+			{{ form.email(class='form-control') }}
+			{% for e in form.email.errors %}<div class="error">{{ e }}</div>{% endfor %}
+		</div>
+		<div class="form-group">
+			{{ form.username.label }}
+			{{ form.username(class='form-control') }}
+			{% for e in form.username.errors %}<div class="error">{{ e }}</div>{% endfor %}
+		</div>
+		<div class="form-group">
+			{{ form.password.label }}
+			{{ form.password(class='form-control') }}
+			{% for e in form.password.errors %}<div class="error">{{ e }}</div>{% endfor %}
+		</div>
+		<div class="form-group">
+			{{ form.confirm_password.label }}
+			{{ form.confirm_password(class='form-control') }}
+			{% for e in form.confirm_password.errors %}<div class="error">{{ e }}</div>{% endfor %}
+		</div>
+		<div class="form-group">
+			{{ form.submit(class='submit-btn') }}
+		</div>
+	</form>
+	<p>Already have an account? <a href="{{ url_for('login') }}">Log in</a></p>
+</div>
+{% endblock %}

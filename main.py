@@ -1,8 +1,11 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash
 from werkzeug.utils import secure_filename
-from models import db, Book  # Import the single `db` instance and Book model
+from models import db, Book, User  # Import the single `db` instance and Book, User model
 from datetime import datetime
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
+from forms import SignupForm, LoginForm
 
 app = Flask(__name__)
 
@@ -19,14 +22,26 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 # Initialize the database with the app
 db.init_app(app)
 
+# Flask-Login setup
+login_manager = LoginManager()
+login_manager.login_view = 'login'
+login_manager.init_app(app)
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
 # Routes for Book App
 @app.route('/')
+@login_required
 def index():
-    # Get all books from the database
-    books = Book.query.all()
+    # Get all books for the current user
+    books = Book.query.filter_by(user_id=current_user.id).all()
     return render_template('index.html', books=books)
 
 @app.route('/create', methods=['GET', 'POST'])
+@login_required
 def create():
     if request.method == 'POST':
         try:
@@ -70,6 +85,7 @@ def create():
             
             # Create new book instance
             new_book = Book(
+                user_id=current_user.id,
                 title=title,
                 author=author,
                 genre=genre,
@@ -97,13 +113,21 @@ def create():
     return render_template('create.html')
 
 @app.route('/book/<int:book_id>')
+@login_required
 def book_detail(book_id):
     book = Book.query.get_or_404(book_id)
+    if book.user_id != current_user.id:
+        flash('Not authorized to view this book', 'error')
+        return redirect(url_for('index'))
     return render_template('book_detail.html', book=book)
 
 @app.route('/edit/<int:book_id>', methods=['GET', 'POST'])
+@login_required
 def edit_book(book_id):
     book = Book.query.get_or_404(book_id)
+    if book.user_id != current_user.id:
+        flash('Not authorized to edit this book', 'error')
+        return redirect(url_for('index'))
     
     if request.method == 'POST':
         try:
@@ -133,8 +157,12 @@ def edit_book(book_id):
     return render_template('edit.html', book=book)
 
 @app.route('/delete/<int:book_id>', methods=['POST'])
+@login_required
 def delete_book(book_id):
     book = Book.query.get_or_404(book_id)
+    if book.user_id != current_user.id:
+        flash('Not authorized to delete this book', 'error')
+        return redirect(url_for('index'))
     try:
         db.session.delete(book)
         db.session.commit()
@@ -145,19 +173,64 @@ def delete_book(book_id):
     return redirect(url_for('index'))
 
 @app.route('/reading')
+@login_required
 def reading():
-    books = Book.query.filter_by(status='Reading Now').all()
+    books = Book.query.filter_by(status='Reading Now', user_id=current_user.id).all()
     return render_template('reading.html', books=books)
 
 @app.route('/want_to_read')
+@login_required
 def want_to_read():
-    books = Book.query.filter_by(status='Want to Read').all()
+    books = Book.query.filter_by(status='Want to Read', user_id=current_user.id).all()
     return render_template('want_to_read.html', books=books)
 
 @app.route('/finished')
+@login_required
 def finished():
-    books = Book.query.filter_by(status='Finished').all()
+    books = Book.query.filter_by(status='Finished', user_id=current_user.id).all()
     return render_template('finished.html', books=books)
+
+
+# Auth routes
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    form = SignupForm()
+    if form.validate_on_submit():
+        # Check if email/username exists
+        if User.query.filter((User.email == form.email.data) | (User.username == form.username.data)).first():
+            flash('Email or username already exists', 'error')
+            return render_template('signup.html', form=form)
+
+        hashed = generate_password_hash(form.password.data)
+        user = User(email=form.email.data, username=form.username.data, password_hash=hashed)
+        db.session.add(user)
+        db.session.commit()
+        flash('Account created. Please log in.', 'success')
+        return redirect(url_for('login'))
+    return render_template('signup.html', form=form)
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user and check_password_hash(user.password_hash, form.password.data):
+            login_user(user, remember=form.remember.data)
+            flash('Logged in successfully', 'success')
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('index'))
+        else:
+            flash('Invalid email or password', 'error')
+    return render_template('login.html', form=form)
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('Logged out', 'success')
+    return redirect(url_for('login'))
 
 # Helper Function
 def allowed_file(filename):

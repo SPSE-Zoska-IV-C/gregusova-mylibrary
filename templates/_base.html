@@ -19,16 +19,33 @@
 <div class="top-menu">
 
     <nav>
-      <a href="{{ url_for('index') }}">My Library</a>
-      <a href="{{ url_for('create') }}">Add Book</a>
-      <a href="{{ url_for('reading') }}">Reading Now</a>
-      <a href="{{ url_for('want_to_read') }}">Want to Read</a>
-      <a href="{{ url_for('finished') }}">Finished</a>
+      <a href="{{ url_for('index') }}" title="My Library"><span class="label">My Library</span></a>
+      <a href="{{ url_for('create') }}" title="Add Book"><span class="label">Add Book</span></a>
+      <a href="{{ url_for('reading') }}" title="Reading Now"><span class="label">Reading Now</span></a>
+      <a href="{{ url_for('want_to_read') }}" title="Want to Read"><span class="label">Want to Read</span></a>
+      <a href="{{ url_for('finished') }}" title="Finished"><span class="label">Finished</span></a>
+            <span style="flex:1"></span>
+            {% if current_user.is_authenticated %}
+                <span class="user-badge"><span class="label">Hi, {{ current_user.username }}</span></span>
+                <a href="{{ url_for('logout') }}" title="Logout"><span class="label">Logout</span></a>
+            {% else %}
+                <a href="{{ url_for('login') }}" title="Login"><span class="label">Login</span></a>
+                <a href="{{ url_for('signup') }}" title="Sign up"><span class="label">Sign up</span></a>
+            {% endif %}
     </nav>
 </div>
 
 
 <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flashes">
+                    {% for category, message in messages %}
+                        <li class="flash {{ category }}">{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
     {% block content %}
     {% endblock %}
     

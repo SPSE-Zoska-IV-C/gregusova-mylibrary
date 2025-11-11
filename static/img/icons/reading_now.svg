@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#6b4c41" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Open book -->
+  <path d="M4 6.5h6.5A3.5 3.5 0 0 1 14 10v10H8.5A4.5 4.5 0 0 1 4 15.5V6.5z"/>
+  <path d="M20 6.5h-6.5A3.5 3.5 0 0 0 10 10v10h5.5A4.5 4.5 0 0 0 20 15.5V6.5z"/>
+  <path d="M10 10s1.5-.75 2-.75S14 10 14 10"/>
+</svg>
