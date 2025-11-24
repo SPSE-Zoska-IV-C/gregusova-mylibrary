@@ -1,4 +1,99 @@
 {% extends '_base.html' %}
 
-<!-- {% block content %}
-{% endblock %} -->
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/mylist.css') }}">
+<script defer src="{{ url_for('static', filename='js/mylist.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<section class="mylist-wrapper">
+	<header class="mylist-header">
+		<div>
+			<p class="eyebrow">Your personal shelf</p>
+			<h2>My List</h2>
+			<p class="summary">Currently tracking <strong>{{ books|length }}</strong> {{ 'book' if books|length == 1 else 'books' }}.</p>
+		</div>
+		<a class="cta" href="{{ url_for('create') }}">+ Add a new book</a>
+	</header>
+
+	{% if books %}
+	<div class="book-grid">
+		{% for book in books %}
+		{% set book_payload = {
+			'id': book.id,
+			'title': book.title,
+			'author': book.author,
+			'status': book.status,
+			'genre': book.genre,
+			'pages': book.pages,
+			'pages_read': book.pages_read,
+			'rating': book.rating,
+			'notes': book.notes,
+			'cover_url': url_for('static', filename=book.cover if book.cover else 'img/book0.png'),
+			'start_date': book.start_date.strftime('%Y-%m-%d') if book.start_date else '',
+			'finish_date': book.finish_date.strftime('%Y-%m-%d') if book.finish_date else ''
+		} %}
+		<article class="book-card" data-book='{{ book_payload | tojson }}'>
+			<span class="status-pill status-{{ book.status|lower|replace(' ', '-') }}">
+				{{ book.status }}
+			</span>
+			<div class="cover-frame">
+				<img src="{{ url_for('static', filename=book.cover if book.cover else 'img/book0.png') }}" alt="{{ book.title }} cover">
+			</div>
+			<div class="book-meta">
+				<h3>{{ book.title }}</h3>
+				<p class="author">by {{ book.author }}</p>
+			</div>
+		</article>
+		{% endfor %}
+	</div>
+	{% else %}
+	<div class="empty-state">
+		<p>You haven’t added any books yet.</p>
+		<a href="{{ url_for('create') }}" class="cta ghost">Start by adding your first book</a>
+	</div>
+	{% endif %}
+</section>
+
+<section class="book-panel" id="bookPanel" aria-hidden="true">
+	<div class="panel-overlay" data-panel-close></div>
+	<div class="panel-card" role="dialog" aria-modal="true" aria-labelledby="panelTitle" tabindex="-1">
+		<button class="panel-close" type="button" data-panel-close>&times;</button>
+		<div class="panel-header">
+			<div class="panel-cover">
+				<img id="panelCover" src="" alt="Book cover">
+			</div>
+			<div class="panel-heading-text">
+				<p class="panel-status" id="panelStatus"></p>
+				<h3 id="panelTitle"></h3>
+				<p id="panelAuthor" class="panel-author"></p>
+			</div>
+		</div>
+		<div class="panel-body">
+			<ul class="panel-facts">
+				<li><span>Genre</span><strong id="panelGenre">—</strong></li>
+				<li><span>Pages</span><strong id="panelPages">—</strong></li>
+				<li><span>Rating</span><strong id="panelRating">—</strong></li>
+				<li><span>Started</span><strong id="panelStart">—</strong></li>
+				<li><span>Finished</span><strong id="panelFinish">—</strong></li>
+			</ul>
+			<div class="panel-notes">
+				<h4>Notes</h4>
+				<p id="panelNotes">No notes yet.</p>
+			</div>
+		</div>
+		<div class="panel-progress" id="panelProgressSection" hidden>
+			<h4>Update progress</h4>
+			<form id="progressForm" method="POST">
+				<label for="progressSlider">Pages read <span id="progressValue"></span></label>
+				<input type="range" id="progressSlider" name="pages_read" min="0" value="0">
+				<label for="progressNotes">Notes</label>
+				<textarea id="progressNotes" name="notes" rows="3" placeholder="Add your thoughts..."></textarea>
+				<div class="panel-actions">
+					<button type="submit" class="cta">Save progress</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</section>
+{% endblock %}

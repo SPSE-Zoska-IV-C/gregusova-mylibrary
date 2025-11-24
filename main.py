@@ -32,13 +32,13 @@ login_manager.init_app(app)
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Routes for Book App
-@app.route('/')
-@login_required
-def index():
-    # Get all books for the current user
-    books = Book.query.filter_by(user_id=current_user.id).all()
-    return render_template('index.html', books=books)
+# # Routes for Book App
+# @app.route('/')
+# @login_required
+# def index():
+#     # Get all books for the current user
+#     books = Book.query.filter_by(user_id=current_user.id).all()
+#     return render_template('index.html', books=books)
 
 @app.route('/create', methods=['GET', 'POST'])
 @login_required
@@ -121,6 +121,44 @@ def book_detail(book_id):
         return redirect(url_for('index'))
     return render_template('book_detail.html', book=book)
 
+
+@app.route('/book/<int:book_id>/progress', methods=['POST'])
+@login_required
+def update_progress(book_id):
+    book = Book.query.get_or_404(book_id)
+    if book.user_id != current_user.id:
+        flash('Not authorized to update this book', 'error')
+        return redirect(url_for('mylist'))
+
+    if (book.status or '').lower() != 'reading now':
+        flash('Progress can only be updated for books that are Reading Now.', 'error')
+        return redirect(url_for('mylist'))
+
+    pages_read_raw = request.form.get('pages_read', book.pages_read)
+    notes = request.form.get('notes', '')
+
+    try:
+        pages_read = int(pages_read_raw)
+    except (TypeError, ValueError):
+        flash('Please provide a valid number of pages read.', 'error')
+        return redirect(url_for('mylist'))
+
+    pages_read = max(0, min(pages_read, book.pages or pages_read))
+    book.pages_read = pages_read
+    book.notes = notes.strip() if notes is not None else book.notes
+
+    if book.pages and pages_read >= book.pages and book.finish_date is None:
+        book.finish_date = datetime.utcnow().date()
+
+    try:
+        db.session.commit()
+        flash('Progress updated.', 'success')
+    except Exception as exc:
+        db.session.rollback()
+        flash(f'Could not update progress: {exc}', 'error')
+
+    return redirect(url_for('mylist'))
+
 @app.route('/edit/<int:book_id>', methods=['GET', 'POST'])
 @login_required
 def edit_book(book_id):
@@ -189,6 +227,19 @@ def want_to_read():
 def finished():
     books = Book.query.filter_by(status='Finished', user_id=current_user.id).all()
     return render_template('finished.html', books=books)
+
+
+@app.route('/', endpoint='index')
+@app.route('/mylist')
+@login_required
+def mylist():
+    books = (
+        Book.query
+        .filter_by(user_id=current_user.id)
+        .order_by(Book.title.asc())
+        .all()
+    )
+    return render_template('mylist.html', books=books)
 
 
 # Auth routes
