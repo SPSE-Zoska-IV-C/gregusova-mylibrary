@@ -8,8 +8,8 @@ body {
 }
 
 .create-page {
-    max-width: 800px;
-    margin: 20px auto;
+    max-width: 900px;
+    margin: 0 auto;
     padding: 20px;
     background-color: #dccfc6; /* White background for the form */
     border-radius: 8px;
@@ -20,6 +20,69 @@ h2 {
     font-size: 1.8rem;
     color: #6b4c41;
     margin-bottom: 20px;
+}
+
+/* Layout */
+html, body {
+    height: 100%;
+}
+
+.app-shell {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 72px; /* thinner */
+    background: #e9dfd8;
+    border-right: 1px solid rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 14px 8px;
+    box-sizing: border-box;
+}
+
+.nav-items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.nav-items li a {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    padding: 10px 0;
+    border-radius: 10px;
+    transition: background .15s;
+    width: 100%;
+}
+
+.nav-items li a:hover {
+    background: #d8cbc2;
+}
+
+.nav-icon {
+    font-size: 28px; /* keep icon size */
+    line-height: 1;
+}
+
+/* Main content */
+.main-content {
+    flex: 1;
+    padding: 30px 50px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    position: relative;
+    background: #dccfc6;
 }
 
 /* Form Styles */
@@ -235,4 +298,9 @@ button:hover {
     color: #6b4c41; /* Text color */
     width: 100%; /* Full width */
     box-sizing: border-box;
+}
+
+/* Flash messages */
+.flash-container {
+    margin-bottom: 20px;
 }
