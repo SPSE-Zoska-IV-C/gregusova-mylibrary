@@ -6,53 +6,66 @@
 {% endblock %}
 
 {% block content %}
+<!-- Main container for the user's book list -->
 <section class="mylist-wrapper">
-	<header class="mylist-header">
-		<div>
-			<p class="eyebrow">Your personal shelf</p>
-			<h2>My List</h2>
-			<p class="summary">Currently tracking <strong>{{ books|length }}</strong> {{ 'book' if books|length == 1 else 'books' }}.</p>
-		</div>
-		<a class="cta" href="{{ url_for('create') }}">+ Add a new book</a>
-	</header>
+    <!-- Header section with title and "Add book" button -->
+    <header class="mylist-header">
+        <div>
+            <p class="eyebrow">Your personal shelf</p>
+            <h2>My List</h2>
+            <!-- Dynamic book count message -->
+            <p class="summary">Currently tracking <strong>{{ books|length }}</strong> {{ 'book' if books|length == 1 else 'books' }}.</p>
+        </div>
+        <!-- Button to navigate to the "add new book" page -->
+        <a class="cta" href="{{ url_for('create') }}">+ Add a new book</a>
+    </header>
 
-	{% if books %}
-	<div class="book-grid">
-		{% for book in books %}
-		{% set book_payload = {
-			'id': book.id,
-			'title': book.title,
-			'author': book.author,
-			'status': book.status,
-			'genre': book.genre,
-			'pages': book.pages,
-			'pages_read': book.pages_read,
-			'rating': book.rating,
-			'notes': book.notes,
-			'cover_url': url_for('static', filename=book.cover if book.cover else 'img/book0.png'),
-			'start_date': book.start_date.strftime('%Y-%m-%d') if book.start_date else '',
-			'finish_date': book.finish_date.strftime('%Y-%m-%d') if book.finish_date else ''
-		} %}
-		<article class="book-card" data-book='{{ book_payload | tojson }}'>
-			<span class="status-pill status-{{ book.status|lower|replace(' ', '-') }}">
-				{{ book.status }}
-			</span>
-			<div class="cover-frame">
-				<img src="{{ url_for('static', filename=book.cover if book.cover else 'img/book0.png') }}" alt="{{ book.title }} cover">
-			</div>
-			<div class="book-meta">
-				<h3>{{ book.title }}</h3>
-				<p class="author">by {{ book.author }}</p>
-			</div>
-		</article>
-		{% endfor %}
-	</div>
-	{% else %}
-	<div class="empty-state">
-		<p>You haven’t added any books yet.</p>
-		<a href="{{ url_for('create') }}" class="cta ghost">Start by adding your first book</a>
-	</div>
-	{% endif %}
+    <!-- Display books if any exist in the list -->
+    {% if books %}
+    <div class="book-grid">
+        <!-- Loop through each book in the list -->
+        {% for book in books %}
+        <!-- Prepare book data as JSON payload for JavaScript -->
+        {% set book_payload = {
+            'id': book.id,
+            'title': book.title,
+            'author': book.author,
+            'status': book.status,
+            'genre': book.genre,
+            'pages': book.pages,
+            'pages_read': book.pages_read,
+            'rating': book.rating,
+            'notes': book.notes,
+            'cover_url': url_for('static', filename=book.cover if book.cover else 'img/book0.png'),
+            'start_date': book.start_date.strftime('%Y-%m-%d') if book.start_date else '',
+            'finish_date': book.finish_date.strftime('%Y-%m-%d') if book.finish_date else ''
+        } %}
+        <!-- Individual book card with embedded JSON data -->
+        <article class="book-card" data-book='{{ book_payload | tojson }}'>
+            <!-- Status badge (e.g., "Reading", "Completed") -->
+            <span class="status-pill status-{{ book.status|lower|replace(' ', '-') }}">
+                {{ book.status }}
+            </span>
+            <!-- Book cover image -->
+            <div class="cover-frame">
+                <img src="{{ url_for('static', filename=book.cover if book.cover else 'img/book0.png') }}" alt="{{ book.title }} cover">
+            </div>
+            <!-- Book title and author information -->
+            <div class="book-meta">
+                <h3>{{ book.title }}</h3>
+                <p class="author">by {{ book.author }}</p>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    <!-- Display empty state if no books exist -->
+    {% else %}
+    <div class="empty-state">
+        <p>You haven't added any books yet.</p>
+        <!-- Link to add first book -->
+        <a href="{{ url_for('create') }}" class="cta ghost">Start by adding your first book</a>
+    </div>
+    {% endif %}
 </section>
 
 <section class="book-panel" id="bookPanel" aria-hidden="true">

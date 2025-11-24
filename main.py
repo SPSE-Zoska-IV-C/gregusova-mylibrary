@@ -186,6 +186,7 @@ def edit_book(book_id):
             book.pages_read = int(pages_read) if pages_read else 0
             
             db.session.commit()
+            # Flash success message to user
             flash('Book updated successfully!', 'success')
             return redirect(url_for('book_detail', book_id=book.id))
             

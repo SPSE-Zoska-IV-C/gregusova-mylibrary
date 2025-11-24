@@ -32,13 +32,32 @@ document.addEventListener('DOMContentLoaded', () => {
     titleEl.textContent = data.title || 'Untitled';
     authorEl.textContent = data.author ? `by ${data.author}` : '';
     genreEl.textContent = data.genre || '—';
-    pagesEl.textContent = data.pages ? `${data.pages_read || 0}/${data.pages}` : (data.pages_read || '—');
-    ratingEl.textContent = data.rating ? `${data.rating}/5` : '—';
+    const totalPages = Number(data.pages) || 0;
+    const readPages = Number(data.pages_read) || 0;
+    const status = (data.status || '').toLowerCase();
+    if (totalPages > 0) {
+      const displayRead = status === 'already read' ? totalPages : readPages;
+      pagesEl.textContent = `${displayRead}/${totalPages}`;
+    } else {
+      pagesEl.textContent = readPages ? `${readPages}` : '—';
+    }
+
+    if (data.rating) {
+      const rating = Math.min(5, Math.max(0, Number(data.rating)));
+      const filled = '★'.repeat(rating);
+      const empty = '☆'.repeat(5 - rating);
+      ratingEl.innerHTML = `
+        <span class="rating-stars" aria-hidden="true">${filled}${empty}</span>
+        <span class="rating-value">${rating}/5</span>
+      `;
+    } else {
+      ratingEl.textContent = '—';
+    }
     startEl.textContent = data.start_date || '—';
     finishEl.textContent = data.finish_date || '—';
     notesEl.textContent = data.notes && data.notes.trim().length ? data.notes : 'No notes yet.';
 
-    const isReading = (data.status || '').toLowerCase() === 'reading now';
+    const isReading = status === 'reading now';
     if (isReading) {
       progressSection.hidden = false;
       const sliderMax = data.pages && data.pages > 0 ? data.pages : Math.max(data.pages_read || 0, 1);

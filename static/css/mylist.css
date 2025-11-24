@@ -301,6 +301,20 @@ body.panel-open {
     font-weight: 700;
 }
 
+.rating-stars {
+    font-size: 1.1rem;
+    letter-spacing: 0.1rem;
+    color: #f5a524;
+    display: block;
+    line-height: 1.1;
+}
+
+.rating-value {
+    display: block;
+    font-size: 0.85rem;
+    color: rgba(70, 52, 44, 0.7);
+}
+
 .panel-notes {
     background: rgba(255, 255, 255, 0.9);
     border-radius: 16px;
@@ -356,5 +370,11 @@ body.panel-open {
 
     .panel-cover {
         width: 100%;
+    }
+}
+
+@media (min-width: 992px) {
+    .mylist-wrapper {
+        padding-top: 1.5rem;
     }
 }
