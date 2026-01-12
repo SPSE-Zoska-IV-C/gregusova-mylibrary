@@ -12,6 +12,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
+    profile_picture = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     books = db.relationship('Book', backref='user', lazy=True, cascade='all, delete')
 
@@ -32,3 +33,4 @@ class Book(db.Model):
     pages_read = db.Column(db.Integer, nullable=False, default=0)
     start_date = db.Column(db.Date, nullable=True)
     finish_date = db.Column(db.Date, nullable=True)
+    retailer_link = db.Column(db.String(255), nullable=True)

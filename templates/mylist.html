@@ -10,15 +10,78 @@
 <section class="mylist-wrapper">
     <!-- Header section with title and "Add book" button -->
     <header class="mylist-header">
-        <div>
+        <div class="header-text">
             <p class="eyebrow">Your personal shelf</p>
             <h2>My List</h2>
             <!-- Dynamic book count message -->
             <p class="summary">Currently tracking <strong>{{ books|length }}</strong> {{ 'book' if books|length == 1 else 'books' }}.</p>
         </div>
-        <!-- Button to navigate to the "add new book" page -->
-        <a class="cta" href="{{ url_for('create') }}">+ Add a new book</a>
+        <div class="header-actions">
+            <!-- Button to navigate to the "add new book" page -->
+            <a class="cta" href="{{ url_for('create') }}">+ Add a new book</a>
+        </div>
     </header>
+
+    <form class="mylist-search" role="search" method="get" action="{{ url_for('mylist') }}">
+        <label class="sr-only" for="bookSearch">Search within your list</label>
+        <div class="search-controls">
+            <div class="search-field">
+                <img src="{{ url_for('static', filename='img/icons/search.svg') }}" alt="" aria-hidden="true">
+                <input type="search" id="bookSearch" name="q" value="{{ filters.q }}" placeholder="Search by title or author" autocomplete="off">
+                <button type="submit" class="search-submit">Search</button>
+            </div>
+            <button type="button" class="filter-toggle" id="filterToggle">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
+                <span>Filters</span>
+            </button>
+        </div>
+        
+        <!-- Filter dropdown -->
+        <div class="filter-panel" id="filterPanel" hidden>
+            <div class="filter-section">
+                <label for="statusFilter">Reading Status</label>
+                <select id="statusFilter" name="status" class="filter-select">
+                    <option value="all" {% if filters.status == 'all' %}selected{% endif %}>All Books</option>
+                    <option value="Reading Now" {% if filters.status == 'Reading Now' %}selected{% endif %}>Reading Now</option>
+                    <option value="Already Read" {% if filters.status == 'Already Read' %}selected{% endif %}>Already Read</option>
+                    <option value="Finished" {% if filters.status == 'Finished' %}selected{% endif %}>Finished</option>
+                </select>
+            </div>
+            
+            <div class="filter-section">
+                <label for="genreFilter">Genre</label>
+                <select id="genreFilter" name="genre" class="filter-select">
+                    <option value="all" {% if filters.genre == 'all' %}selected{% endif %}>All Genres</option>
+                    {% for genre in filters.genres %}
+                    <option value="{{ genre }}" {% if filters.genre == genre %}selected{% endif %}>{{ genre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-section">
+                <label for="sortFilter">Sort By</label>
+                <select id="sortFilter" name="sort" class="filter-select">
+                    <option value="title" {% if filters.sort == 'title' %}selected{% endif %}>Title (A-Z)</option>
+                    <option value="title_desc" {% if filters.sort == 'title_desc' %}selected{% endif %}>Title (Z-A)</option>
+                    <option value="author" {% if filters.sort == 'author' %}selected{% endif %}>Author (A-Z)</option>
+                    <option value="author_desc" {% if filters.sort == 'author_desc' %}selected{% endif %}>Author (Z-A)</option>
+                    <option value="start_date" {% if filters.sort == 'start_date' %}selected{% endif %}>Date Started (Newest)</option>
+                    <option value="start_date_asc" {% if filters.sort == 'start_date_asc' %}selected{% endif %}>Date Started (Oldest)</option>
+                    <option value="rating" {% if filters.sort == 'rating' %}selected{% endif %}>Rating (High to Low)</option>
+                    <option value="rating_asc" {% if filters.sort == 'rating_asc' %}selected{% endif %}>Rating (Low to High)</option>
+                </select>
+            </div>
+            
+            <div class="filter-actions">
+                <button type="submit" class="filter-apply">Apply Filters</button>
+                <button type="button" class="filter-reset" id="filterReset">Reset</button>
+            </div>
+        </div>
+        
+        <p class="search-feedback" id="searchFeedback" {% if not (filters.q and not books) %}hidden{% endif %}>No books match your search.</p>
+    </form>
 
     <!-- Display books if any exist in the list -->
     {% if books %}
@@ -38,7 +101,8 @@
             'notes': book.notes,
             'cover_url': url_for('static', filename=book.cover if book.cover else 'img/book0.png'),
             'start_date': book.start_date.strftime('%Y-%m-%d') if book.start_date else '',
-            'finish_date': book.finish_date.strftime('%Y-%m-%d') if book.finish_date else ''
+            'finish_date': book.finish_date.strftime('%Y-%m-%d') if book.finish_date else '',
+            'retailer_link': book.retailer_link
         } %}
         <!-- Individual book card with embedded JSON data -->
         <article class="book-card" data-book='{{ book_payload | tojson }}'>
@@ -55,15 +119,48 @@
                 <h3>{{ book.title }}</h3>
                 <p class="author">by {{ book.author }}</p>
             </div>
+            <!-- Quick action buttons -->
+            <div class="card-actions">
+                <div class="status-dropdown">
+                    <button type="button" class="action-btn status-btn" data-book-id="{{ book.id }}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="1"></circle>
+                            <circle cx="12" cy="5" r="1"></circle>
+                            <circle cx="12" cy="19" r="1"></circle>
+                        </svg>
+                    </button>
+                    <div class="status-menu" hidden>
+                        <form method="POST" action="{{ url_for('change_status', book_id=book.id) }}">
+                            <button type="submit" name="new_status" value="Reading Now">Reading Now</button>
+                            <button type="submit" name="new_status" value="Want to Read">Want to Read</button>
+                            <button type="submit" name="new_status" value="Already Read">Already Read</button>
+                            <button type="submit" name="new_status" value="Finished">Finished</button>
+                        </form>
+                    </div>
+                </div>
+                <form method="POST" action="{{ url_for('delete_book', book_id=book.id) }}" style="display: inline;" onsubmit="return confirm('Delete this book from your library?');">
+                    <button type="submit" class="action-btn danger" title="Delete">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </button>
+                </form>
+            </div>
         </article>
         {% endfor %}
     </div>
     <!-- Display empty state if no books exist -->
     {% else %}
     <div class="empty-state">
-        <p>You haven't added any books yet.</p>
-        <!-- Link to add first book -->
-        <a href="{{ url_for('create') }}" class="cta ghost">Start by adding your first book</a>
+        {% if filters.q or filters.status|lower != 'all' or filters.sort != 'title' %}
+            <p>No books match your filters.</p>
+            <a href="{{ url_for('mylist') }}" class="cta ghost">Reset filters</a>
+        {% else %}
+            <p>You haven't added any books yet.</p>
+            <!-- Link to add first book -->
+            <a href="{{ url_for('create') }}" class="cta ghost">Start by adding your first book</a>
+        {% endif %}
     </div>
     {% endif %}
 </section>
@@ -94,12 +191,56 @@
 				<h4>Notes</h4>
 				<p id="panelNotes">No notes yet.</p>
 			</div>
+			<div class="panel-quick-actions">
+				<div class="panel-action-group">
+					<label>Change Status</label>
+					<form id="panelStatusForm" method="POST" action="">
+						<select name="new_status" class="panel-status-select" onchange="this.form.submit()">
+							<option value="">Select status...</option>
+							<option value="Reading Now">Reading Now</option>
+							<option value="Want to Read">Want to Read</option>
+							<option value="Already Read">Already Read</option>
+							<option value="Finished">Finished</option>
+						</select>
+					</form>
+				</div>
+				<div class="panel-action-group">
+					<label>Remove Book</label>
+					<form id="panelDeleteForm" method="POST" action="" onsubmit="return confirm('Delete this book from your library?');">
+						<button type="submit" class="panel-delete-btn">
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<polyline points="3 6 5 6 21 6"></polyline>
+								<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+							</svg>
+							Delete Book
+						</button>
+					</form>
+				</div>
+			</div>
 		</div>
 		<div class="panel-progress" id="panelProgressSection" hidden>
 			<h4>Update progress</h4>
 			<form id="progressForm" method="POST">
 				<label for="progressSlider">Pages read <span id="progressValue"></span></label>
 				<input type="range" id="progressSlider" name="pages_read" min="0" value="0">
+                <div class="completion-controls" id="completionControls" hidden>
+                    <div class="finish-date-field">
+                        <label for="finishDateInput">Finish date</label>
+                        <input type="date" id="finishDateInput" name="finish_date">
+                    </div>
+                    <div class="completion-rating">
+                        <span>Add a rating</span>
+                        <div class="star-rating" id="completionRating">
+                            <span data-value="1" class="star">&#9733;</span>
+                            <span data-value="2" class="star">&#9733;</span>
+                            <span data-value="3" class="star">&#9733;</span>
+                            <span data-value="4" class="star">&#9733;</span>
+                            <span data-value="5" class="star">&#9733;</span>
+                        </div>
+                        <input type="hidden" name="rating" id="completionRatingInput">
+                    </div>
+                </div>
+                <input type="hidden" name="mark_finished" id="markFinished" value="false">
 				<label for="progressNotes">Notes</label>
 				<textarea id="progressNotes" name="notes" rows="3" placeholder="Add your thoughts..."></textarea>
 				<div class="panel-actions">

@@ -1,0 +1,24 @@
+# Apache/Passenger configuration for the Flask app
+# Replace <USERNAME> with your actual hosting account name (e.g., nikituchka)
+
+PassengerEnabled on
+PassengerAppRoot /home/<USERNAME>/public_html
+PassengerStartupFile wsgi.py
+PassengerAppEnv production
+PassengerPython /home/<USERNAME>/virtualenv/public_html/3.11/bin/python
+PassengerFriendlyErrorPages off
+PassengerLogFile /home/<USERNAME>/logs/passenger.log
+
+# Prevent direct access to compiled python files
+<FilesMatch "\.(pyc|pyo)$">
+    Require all denied
+</FilesMatch>
+
+# Allow Apache to serve existing static files and fall back to the app for everything else
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+    RewriteRule ^(.*)$ /$1 [QSA,L]
+</IfModule>

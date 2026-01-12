@@ -14,81 +14,115 @@
     </div>
 
     <form method="POST" enctype="multipart/form-data" action="{{ url_for('create') }}">
-      <input type="hidden" name="status" id="status" value="Reading Now">
+      <input type="hidden" name="status" id="status" value="{{ request.form.get('status', 'Reading Now') }}">
+      <input type="hidden" name="source_want_id" value="{{ request.form.get('source_want_id', prefill_book.id if prefill_book else '') }}">
 
       <div class="form-group">
         <label for="title">Title</label>
-        <input type="text" name="title" id="title" class="form-control" required>
+        <input type="text" name="title" id="title" class="form-control" required value="{{ request.form.get('title', prefill_book.title if prefill_book else '') }}">
       </div>
 
       <div class="form-group">
         <label for="author">Author</label>
-        <input type="text" name="author" id="author" class="form-control" required>
+        <input type="text" name="author" id="author" class="form-control" required value="{{ request.form.get('author', prefill_book.author if prefill_book else '') }}">
       </div>
 
       <div class="form-group">
         <label for="genre">Genre</label>
-        <textarea name="genre" id="genre" class="form-control" required></textarea>
+        <textarea name="genre" id="genre" class="form-control" required>{{ request.form.get('genre', prefill_book.genre if prefill_book else '') }}</textarea>
       </div>
 
       <div class="form-group">
         <label for="pages">Number of Pages</label>
-        <input type="number" name="pages" id="pages" class="form-control" min="1" required>
+        <input type="number" name="pages" id="pages" class="form-control" min="1" required value="{{ request.form.get('pages', prefill_book.pages if prefill_book else '') }}">
       </div>
 
       <!-- Reading Now only -->
       <div id="pages-read-section" class="form-group">
         <label for="pages_read">Pages Read</label>
-        <input type="number" name="pages_read" id="pages_read" class="form-control" min="0" value="0">
+        <input type="number" name="pages_read" id="pages_read" class="form-control" min="0" value="{{ request.form.get('pages_read', prefill_book.pages_read if prefill_book else 0) }}">
       </div>
       <div id="start-date-reading" class="form-group">
         <label for="start_date_reading">Start date</label>
-        <input type="date" id="start_date_reading" name="start_date" class="form-control" required>
+        <input type="date" id="start_date_reading" name="start_date" class="form-control" required value="{{ request.form.get('start_date', prefill_book.start_date.strftime('%Y-%m-%d') if prefill_book and prefill_book.start_date else '') }}">
       </div>
 
       <!-- Already Read only -->
       <div id="already-read-section" style="display:none;">
         <div class="form-group">
           <label for="start_date_read">Start date</label>
-          <input type="date" id="start_date_read" name="start_date" class="form-control" disabled>
+          <input type="date" id="start_date_read" name="start_date" class="form-control" disabled value="{{ request.form.get('start_date', prefill_book.start_date.strftime('%Y-%m-%d') if prefill_book and prefill_book.start_date else '') }}">
         </div>
         <div class="form-group">
           <label for="finish_date">Finish date</label>
-          <input type="date" id="finish_date" name="finish_date" class="form-control" disabled>
+          <input type="date" id="finish_date" name="finish_date" class="form-control" disabled value="{{ request.form.get('finish_date', prefill_book.finish_date.strftime('%Y-%m-%d') if prefill_book and prefill_book.finish_date else '') }}">
         </div>
         <div class="form-group">
           <label for="notes">Notes</label>
-          <textarea name="notes" id="notes" class="form-control"></textarea>
+          <textarea name="notes" id="notes" class="form-control" placeholder="Add your thoughts, favorite quotes, or reflections about this book...">{{ request.form.get('notes', prefill_book.notes if prefill_book else '') }}</textarea>
         </div>
         <div class="form-group">
           <label for="rating">Rating</label>
+          {% set initial_rating = request.form.get('rating', prefill_book.rating if prefill_book and prefill_book.rating else '') %}
           <div id="star-rating" class="star-rating">
-            <span data-value="1" class="star">&#9733;</span>
-            <span data-value="2" class="star">&#9733;</span>
-            <span data-value="3" class="star">&#9733;</span>
-            <span data-value="4" class="star">&#9733;</span>
-            <span data-value="5" class="star">&#9733;</span>
+            {% for value in range(1,6) %}
+            <span data-value="{{ value }}" class="star{% if initial_rating and value <= initial_rating|int %} selected{% endif %}">&#9733;</span>
+            {% endfor %}
           </div>
-          <input type="hidden" name="rating" id="rating" value="">
+          <input type="hidden" name="rating" id="rating" value="{{ initial_rating }}">
         </div>
       </div>
 
       <!-- Cover -->
+      {% set selected_cover = request.form.get('cover', prefill_book.cover if prefill_book else '') %}
       <div class="form-group">
         <label for="cover">Choose a Cover Design</label>
-        <div class="cover-options">
-          <label>
-            <input type="radio" name="cover" value="img/book_01.png" required>
-            <img src="{{ url_for('static', filename='img/book_01.png') }}" alt="Cover 1" class="cover-preview">
-          </label>
-          <label>
-            <input type="radio" name="cover" value="img/book_02.png" required>
-            <img src="{{ url_for('static', filename='img/book_02.png') }}" alt="Cover 2" class="cover-preview">
-          </label>
-          <label>
-            <input type="radio" name="cover" value="img/book_03.png" required>
-            <img src="{{ url_for('static', filename='img/book_03.png') }}" alt="Cover 3" class="cover-preview">
-          </label>
+        <div class="cover-picker">
+          {% if cover_designs %}
+          <div class="cover-design-grid">
+            {% set ns = namespace(rendered_first_variant=false) %}
+            {% for design in cover_designs %}
+            <div class="cover-design-card" data-design="{{ design.id }}">
+              <div class="cover-design-wrapper">
+                <div class="cover-display">
+                  <img src="{{ url_for('static', filename=design.preview) }}" alt="{{ design.name }}" class="cover-preview-main" data-design="{{ design.id }}">
+                  <span class="cover-name">{{ design.name }}</span>
+                </div>
+                <div class="color-dots-container">
+                  {% for variant in design.variants %}
+                  {% set is_selected = selected_cover and selected_cover == variant.file %}
+                  <label class="color-dot-wrapper" title="Color {{ variant.label }}">
+                    <input type="radio"
+                           name="cover"
+                           value="{{ variant.file }}"
+                           data-preview-src="{{ url_for('static', filename=variant.file) }}"
+                           data-design="{{ design.id }}"
+                           {% if is_selected %}
+                             checked
+                           {% elif not selected_cover and not ns.rendered_first_variant and loop.first %}
+                             checked
+                           {% endif %}
+                           {% if not ns.rendered_first_variant and loop.first %}required{% endif %}>
+                    <div class="color-dot{% if is_selected or (not selected_cover and not ns.rendered_first_variant and loop.first) %} selected{% endif %}" 
+                         style="background-image: url('{{ url_for('static', filename=variant.file) }}');"
+                         data-preview-src="{{ url_for('static', filename=variant.file) }}">
+                    </div>
+                  </label>
+                  {% if not selected_cover and not ns.rendered_first_variant and loop.first %}
+                    {% set ns.rendered_first_variant = true %}
+                  {% endif %}
+                  {% if is_selected %}
+                    {% set ns.rendered_first_variant = true %}
+                  {% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p class="cover-empty-state">No cover designs available right now.</p>
+          {% endif %}
         </div>
       </div>
 
@@ -99,74 +133,5 @@
   </div>
 </div>
 
-<script>
-  // Toggle sections + required/disabled flags
-  const readingBtn = document.getElementById('reading-btn');
-  const readBtn = document.getElementById('read-btn');
-  const statusInput = document.getElementById('status');
-
-  const pagesReadSection = document.getElementById('pages-read-section');
-  const startDateReading = document.getElementById('start_date_reading');
-
-  const alreadyReadSection = document.getElementById('already-read-section');
-  const startDateRead = document.getElementById('start_date_read');
-  const finishDate = document.getElementById('finish_date');
-
-  function activateReadingNow() {
-    alreadyReadSection.style.display = 'none';
-    pagesReadSection.style.display = 'block';
-
-    statusInput.value = 'Reading Now';
-
-    // enable reading start date
-    startDateReading.disabled = false;
-    startDateReading.required = true;
-
-    // disable already-read dates
-    startDateRead.disabled = true; startDateRead.required = false; startDateRead.value = '';
-    finishDate.disabled = true; finishDate.required = false; finishDate.value = '';
-
-    readingBtn.classList.add('active');
-    readBtn.classList.remove('active');
-  }
-
-  function activateAlreadyRead() {
-    alreadyReadSection.style.display = 'block';
-    pagesReadSection.style.display = 'none';
-
-    statusInput.value = 'Already Read';
-
-    // disable reading start date
-    startDateReading.disabled = true; startDateReading.required = false;
-
-    // enable already-read dates
-    startDateRead.disabled = false; startDateRead.required = true;
-    finishDate.disabled = false; finishDate.required = true;
-
-    readBtn.classList.add('active');
-    readingBtn.classList.remove('active');
-  }
-
-  readingBtn.addEventListener('click', activateReadingNow);
-  readBtn.addEventListener('click', activateAlreadyRead);
-  activateReadingNow(); // initial state
-
-  // star rating
-  const stars = document.querySelectorAll('.star');
-  const ratingInput = document.getElementById('rating');
-  stars.forEach(star => {
-    star.addEventListener('click', function () {
-      const value = this.getAttribute('data-value');
-      ratingInput.value = value;
-      stars.forEach(s => s.classList.toggle('selected', s.getAttribute('data-value') <= value));
-    });
-    star.addEventListener('mouseover', function () {
-      const value = this.getAttribute('data-value');
-      stars.forEach(s => s.classList.toggle('hovered', s.getAttribute('data-value') <= value));
-    });
-    star.addEventListener('mouseout', function () {
-      stars.forEach(s => s.classList.remove('hovered'));
-    });
-  });
-</script>
+<script defer src="{{ url_for('static', filename='js/book_form.js') }}"></script>
 {% endblock %}

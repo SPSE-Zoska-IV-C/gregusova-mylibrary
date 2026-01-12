@@ -1,0 +1,207 @@
+{% extends '_base.html' %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/stats.css') }}">
+<script defer src="{{ url_for('static', filename='js/stats.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+<section class="stats-wrapper">
+	<header class="stats-header">
+		<div class="header-text">
+			<p class="eyebrow">Your reading insights</p>
+			<h2>Statistics</h2>
+			<p class="summary">Track your reading progress and discover your reading patterns.</p>
+		</div>
+	</header>
+
+	<!-- Overview Cards -->
+	<div class="stats-grid">
+		<article class="stat-card">
+			<div class="card-head">
+				<h3>Total Books</h3>
+			</div>
+			<div class="card-body">
+				<p class="big-number">{{ stats.total_books }}</p>
+				<p class="subtext">in your library</p>
+			</div>
+		</article>
+
+		<article class="stat-card">
+			<div class="card-head">
+				<h3>Pages Read</h3>
+			</div>
+			<div class="card-body">
+				<p class="big-number">{{ stats.pages_read_total }}</p>
+				<p class="subtext">total pages</p>
+			</div>
+		</article>
+
+		<article class="stat-card">
+			<div class="card-head">
+				<h3>Completed</h3>
+			</div>
+			<div class="card-body">
+				<p class="big-number">{{ stats.completed_total }}</p>
+				<p class="subtext">books finished</p>
+			</div>
+		</article>
+
+		{% if stats.avg_rating %}
+		<article class="stat-card">
+			<div class="card-head">
+				<h3>Average Rating</h3>
+			</div>
+			<div class="card-body">
+				<p class="big-number">{{ stats.avg_rating }}</p>
+				<p class="subtext">out of 5 stars</p>
+			</div>
+		</article>
+		{% endif %}
+	</div>
+
+	<!-- Reading Progress Graph -->
+	<section class="graph-section">
+		<div class="graph-header">
+			<h3>Reading Progress</h3>
+			<div class="view-toggle">
+				<button type="button" class="toggle-btn active" id="dailyToggle" data-view="daily">By Day</button>
+				<button type="button" class="toggle-btn" id="monthlyToggle" data-view="monthly">By Month</button>
+			</div>
+		</div>
+
+		<!-- Daily View -->
+		<div class="chart-container" id="dailyChart">
+			<div class="chart chart-daily" role="img" aria-label="Pages read per day this month">
+				{% for item in stats.daily %}
+				<div class="bar-item" data-day="{{ item.day }}" title="Day {{ item.day }}: {{ item.pages }} pages">
+					<div class="bar" style="height: {{ item.pct }}%"></div>
+					<span class="bar-label">{{ item.day }}</span>
+					<span class="bar-pages">{{ item.pages }}</span>
+				</div>
+				{% endfor %}
+			</div>
+			<p class="chart-note">{{ stats.month_label }} • Daily reading progress</p>
+		</div>
+
+		<!-- Monthly View -->
+		<div class="chart-container" id="monthlyChart" hidden>
+			<div class="chart chart-monthly" role="img" aria-label="Pages read per month this year">
+				{% for item in stats.monthly %}
+				<div class="bar-item" data-month="{{ item.label }}" title="{{ item.label }}: {{ item.pages }} pages">
+					<div class="bar" style="height: {{ item.pct }}%"></div>
+					<span class="bar-label">{{ item.label }}</span>
+					<span class="bar-pages">{{ item.pages }}</span>
+				</div>
+				{% endfor %}
+			</div>
+			<p class="chart-note">{{ stats.chart_year }} • Monthly reading progress</p>
+		</div>
+	</section>
+
+	<!-- Genre Pie Chart Section -->
+	{% if stats.genre_data %}
+	<section class="pie-chart-section">
+		<h3>Genres Distribution</h3>
+		<div class="pie-chart-container">
+			<svg class="pie-chart" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" id="genrePieChart">
+				<circle cx="100" cy="100" r="50" fill="#fbf8f4"/>
+				<text x="100" y="100" text-anchor="middle" dominant-baseline="middle" font-size="14" fill="#6b4c41" font-weight="600" id="pieCenterText">
+					{{ stats.genre_data|sum(attribute='count') }} Books
+				</text>
+			</svg>
+			<div class="pie-legend">
+				{% set colors = ['#a36b62', '#b98174', '#d4b5a8', '#e2c9bf', '#8e5a52', '#c9a88f', '#9d7a6b', '#b89a8a'] %}
+				{% for genre in stats.genre_data %}
+					{% set color = colors[loop.index0 % colors|length] %}
+					<div class="legend-item" data-genre="{{ genre.name }}" data-percentage="{{ genre.percentage }}" data-color="{{ color }}">
+						<span class="legend-color" style="background-color: {{ color }}"></span>
+						<span class="legend-label">{{ genre.name }}</span>
+						<span class="legend-value">{{ genre.percentage }}%</span>
+					</div>
+				{% endfor %}
+			</div>
+		</div>
+		<script>
+		(function() {
+			const genreData = {{ stats.genre_data | tojson }};
+			const colors = ['#a36b62', '#b98174', '#d4b5a8', '#e2c9bf', '#8e5a52', '#c9a88f', '#9d7a6b', '#b89a8a'];
+			const svg = document.getElementById('genrePieChart');
+			if (!svg || !genreData || genreData.length === 0) return;
+			
+			const centerX = 100;
+			const centerY = 100;
+			const radius = 80;
+			let currentAngle = -90; // Start at top
+			
+			genreData.forEach((genre, index) => {
+				const percentage = genre.percentage;
+				const angle = (percentage / 100) * 360;
+				const startAngle = currentAngle;
+				const endAngle = currentAngle + angle;
+				
+				// Convert angles to radians
+				const startRad = (startAngle * Math.PI) / 180;
+				const endRad = (endAngle * Math.PI) / 180;
+				
+				// Calculate start and end points
+				const x1 = centerX + radius * Math.cos(startRad);
+				const y1 = centerY + radius * Math.sin(startRad);
+				const x2 = centerX + radius * Math.cos(endRad);
+				const y2 = centerY + radius * Math.sin(endRad);
+				
+				// Large arc flag (1 if angle > 180, else 0)
+				const largeArc = angle > 180 ? 1 : 0;
+				
+				// Create path
+				const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+				const pathData = `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+				path.setAttribute('d', pathData);
+				path.setAttribute('fill', colors[index % colors.length]);
+				path.setAttribute('class', 'pie-segment');
+				path.setAttribute('data-genre', genre.name);
+				path.setAttribute('data-percentage', percentage);
+				
+				const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+				title.textContent = `${genre.name}: ${percentage}% (${genre.count} books)`;
+				path.appendChild(title);
+				
+				// Insert before the center circle
+				svg.insertBefore(path, svg.firstChild);
+				
+				currentAngle = endAngle;
+			});
+		})();
+		</script>
+	</section>
+	{% endif %}
+
+	<!-- Additional Stats -->
+	<div class="stats-grid secondary">
+		{% if stats.best_book_month %}
+		<article class="stat-card">
+			<div class="card-head">
+				<h3>Best This Month</h3>
+			</div>
+			<div class="card-body">
+				<p class="book-title">{{ stats.best_book_month.title }}</p>
+				<p class="book-author">by {{ stats.best_book_month.author }}</p>
+				<p class="book-rating">Rating: <strong>{{ stats.best_book_month.rating }}/5</strong></p>
+			</div>
+		</article>
+		{% endif %}
+
+		{% if stats.top_author %}
+		<article class="stat-card">
+			<div class="card-head">
+				<h3>Top Author</h3>
+			</div>
+			<div class="card-body">
+				<p class="book-title">{{ stats.top_author[0] }}</p>
+				<p class="subtext">{{ stats.top_author[1] }} {{ 'book' if stats.top_author[1] == 1 else 'books' }}</p>
+			</div>
+		</article>
+		{% endif %}
+	</div>
+</section>
+{% endblock %}
