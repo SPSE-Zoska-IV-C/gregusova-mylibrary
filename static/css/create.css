@@ -7,8 +7,46 @@ body {
     color: #6b4c41;
 }
 
+/* Cover color swatches (fill these yourself)
+   Each cover design card can override these variables, so dots are per-design.
+*/
+.cover-design-card {
+    --cover-swatch-01: transparent; /* TODO: rgb(...) */
+    --cover-swatch-02: transparent; /* TODO: rgb(...) */
+    --cover-swatch-03: transparent; /* TODO: rgb(...) */
+    --cover-swatch-04: transparent; /* TODO: rgb(...) */
+    --cover-swatch-05: transparent; /* TODO: rgb(...) */
+}
+
+/* Book 1 */
+.cover-design-card[data-design="book_1"] {
+    --cover-swatch-01: #712A2A;
+    --cover-swatch-02: #564046;
+    --cover-swatch-03: #3D4167;
+    --cover-swatch-04: #435435;
+    --cover-swatch-05: #844C21;
+}
+
+/* Book 2 */
+.cover-design-card[data-design="book_2"] {
+    --cover-swatch-01: #485422; /* TODO: rgb(...) */
+    --cover-swatch-02: #7E8F65; /* TODO: rgb(...) */
+    --cover-swatch-03: #5A5984; /* TODO: rgb(...) */
+    --cover-swatch-04: #7F4461; /* TODO: rgb(...) */
+    --cover-swatch-05: #85331B; /* TODO: rgb(...) */
+}
+
+/* Book 3 */
+.cover-design-card[data-design="book_3"] {
+    --cover-swatch-01: #C8B6D3; /* TODO: rgb(...) */
+    --cover-swatch-02: #DEC1AA; /* TODO: rgb(...) */
+    --cover-swatch-03: #B28B9C; /* TODO: rgb(...) */
+    --cover-swatch-04: #9D898B; /* TODO: rgb(...) */
+    --cover-swatch-05: #96A4CE; /* TODO: rgb(...) */
+}
+
 .create-page {
-    max-width: 900px;
+    max-width: 1100px;
     margin: 0 auto;
     padding: 2rem;
     background-color: #dccfc6;
@@ -119,15 +157,20 @@ button:hover {
 
 .cover-design-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(4, minmax(0, max-content));
+    justify-content: start;
+    gap: clamp(0.5rem, 1.2vw, 1.25rem);
 }
 
 .cover-design-card {
+    --cover-image-width: 200px;
+    --cover-card-pad: 0.9rem;
     background: #fbf8f4;
     border: 1px solid rgba(107, 76, 65, 0.15);
     border-radius: 20px;
-    padding: 1.5rem;
+    padding: var(--cover-card-pad);
+    width: fit-content;
+    max-width: calc(var(--cover-image-width) + (var(--cover-card-pad) * 2));
     transition: all 0.3s ease;
     box-shadow: 0 4px 12px rgba(107, 76, 65, 0.08);
 }
@@ -138,10 +181,72 @@ button:hover {
     border-color: rgba(163, 107, 98, 0.3);
 }
 
+/* Custom uploaded cover card */
+.cover-design-card--custom {
+    border-style: dashed;
+}
+
+.cover-design-card--custom.is-selected {
+    border-color: rgba(163, 107, 98, 0.55);
+    box-shadow: 0 8px 20px rgba(107, 76, 65, 0.12);
+}
+
+.cover-custom-area {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: var(--cover-image-width, 180px);
+    aspect-ratio: 2 / 3;
+    border-radius: 18px;
+    border: 2px solid rgba(107, 76, 65, 0.25);
+    background: #fff;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.cover-custom-radio {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.cover-custom-file {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.cover-custom-ui {
+    display: grid;
+    place-items: center;
+    gap: 0.6rem;
+    color: #6b4c41;
+    text-align: center;
+    padding: 1.25rem;
+}
+
+.cover-custom-plus {
+    width: 56px;
+    height: 56px;
+    display: grid;
+    place-items: center;
+    border: 2px solid rgba(107, 76, 65, 0.6);
+    border-radius: 14px;
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.cover-custom-text {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
 .cover-design-wrapper {
     display: flex;
-    gap: 1.5rem;
-    align-items: flex-start;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
 }
 
 .cover-display {
@@ -150,10 +255,12 @@ button:hover {
     flex-direction: column;
     align-items: center;
     gap: 1rem;
+    width: 100%;
 }
 
 .cover-preview-main {
-    width: 160px;
+    width: var(--cover-image-width, 180px);
+    max-width: 100%;
     height: auto;
     border-radius: 12px;
     border: 2px solid rgba(107, 76, 65, 0.1);
@@ -176,14 +283,22 @@ button:hover {
 /* Color Dots - Vertical Arrangement */
 .color-dots-container {
     display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    padding: 0.5rem 0;
+    flex-direction: row;
+    justify-content: center;
+    width: var(--cover-image-width, 180px);
+    max-width: 100%;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.35rem 0 0;
 }
 
 .color-dot-wrapper {
     position: relative;
     cursor: pointer;
+}
+label.color-dot-wrapper {
+    display: flex;
+    margin-bottom: 0;
 }
 
 .color-dot-wrapper input[type="radio"] {
@@ -193,17 +308,21 @@ button:hover {
 }
 
 .color-dot {
-    width: 48px;
-    height: 48px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
-    border: 3px solid rgba(107, 76, 65, 0.2);
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+    border: 2px solid rgba(107, 76, 65, 0.2);
+    background-color: transparent;
     transition: all 0.2s ease;
-    box-shadow: 0 2px 6px rgba(107, 76, 65, 0.2);
+    box-shadow: 0 2px 6px rgba(107, 76, 65, 0.18);
     position: relative;
 }
+
+.color-dot[data-swatch="01"] { background-color: var(--cover-swatch-01); }
+.color-dot[data-swatch="02"] { background-color: var(--cover-swatch-02); }
+.color-dot[data-swatch="03"] { background-color: var(--cover-swatch-03); }
+.color-dot[data-swatch="04"] { background-color: var(--cover-swatch-04); }
+.color-dot[data-swatch="05"] { background-color: var(--cover-swatch-05); }
 
 .color-dot::after {
     content: '';
@@ -221,7 +340,7 @@ button:hover {
 
 .color-dot.selected {
     border-color: #a36b62;
-    border-width: 4px;
+    border-width: 3px;
     box-shadow: 0 4px 16px rgba(163, 107, 98, 0.4);
     transform: scale(1.15);
 }
@@ -232,7 +351,7 @@ button:hover {
 
 .color-dot-wrapper input[type="radio"]:checked + .color-dot {
     border-color: #a36b62;
-    border-width: 4px;
+    border-width: 3px;
     box-shadow: 0 4px 16px rgba(163, 107, 98, 0.4);
     transform: scale(1.15);
 }
@@ -274,18 +393,32 @@ button:hover {
         padding: 1.5rem;
     }
 
-    .cover-design-wrapper {
-        flex-direction: column;
-        align-items: center;
+    .cover-design-grid {
+        grid-template-columns: repeat(3, minmax(0, max-content));
+        justify-content: start;
+        gap: 1rem;
     }
 
-    .color-dots-container {
-        flex-direction: row;
-        justify-content: center;
-        flex-wrap: wrap;
+    .cover-design-card {
+        justify-self: start;
+        --cover-image-width: 170px;
+        --cover-card-pad: 0.75rem;
+    }
+}
+
+@media (max-width: 420px) {
+    .cover-design-grid {
+        grid-template-columns: repeat(2, minmax(0, max-content));
+        gap: 0.55rem;
     }
 
-    .cover-preview-main {
-        width: 140px;
+    .cover-design-card {
+        --cover-image-width: 135px;
+        --cover-card-pad: 0.75rem;
+    }
+
+    .color-dot {
+        width: 24px;
+        height: 24px;
     }
 }

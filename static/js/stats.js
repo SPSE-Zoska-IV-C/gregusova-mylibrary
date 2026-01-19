@@ -1,4 +1,22 @@
 (function(){
+  // Apply bar heights from data attributes (prevents template inline-style parse errors)
+  const bars = document.querySelectorAll('.bar[data-pct]');
+  bars.forEach((bar) => {
+    const pct = Number(bar.getAttribute('data-pct') || 0);
+    const safePct = Number.isFinite(pct) ? Math.max(0, Math.min(100, pct)) : 0;
+    bar.style.height = `${safePct}%`;
+  });
+
+  // Apply legend swatch colors from data-color
+  const legendItems = document.querySelectorAll('.legend-item[data-color]');
+  legendItems.forEach((item) => {
+    const color = item.getAttribute('data-color');
+    const swatch = item.querySelector('.legend-color');
+    if (swatch && color) {
+      swatch.style.backgroundColor = color;
+    }
+  });
+
   // Daily/Monthly toggle functionality
   const dailyToggle = document.getElementById('dailyToggle');
   const monthlyToggle = document.getElementById('monthlyToggle');

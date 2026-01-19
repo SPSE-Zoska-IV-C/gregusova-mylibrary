@@ -1,13 +1,15 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash
 from werkzeug.utils import secure_filename
-from models import db, Book, User  # Import the single `db` instance and Book, User model
+from models import db, Book, User, PageLog  # Import the single `db` instance and Book, User model
 from datetime import datetime, date, timedelta
+from uuid import uuid4
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from forms import SignupForm, LoginForm
 from sqlalchemy import text
 from collections import Counter
+import re
 
 app = Flask(__name__)
 
@@ -90,6 +92,24 @@ def create():
             if not cover:
                 flash('Please select a cover design and color variant.', 'error')
                 return render_template('create.html', cover_designs=cover_designs, prefill_book=prefill_book)
+
+            if cover == '__custom__':
+                uploaded = request.files.get('custom_cover')
+                if not uploaded or not uploaded.filename:
+                    flash('Please upload a cover image.', 'error')
+                    return render_template('create.html', cover_designs=cover_designs, prefill_book=prefill_book)
+                if not allowed_file(uploaded.filename):
+                    flash('Invalid file type. Please upload a PNG, JPG, JPEG, or GIF.', 'error')
+                    return render_template('create.html', cover_designs=cover_designs, prefill_book=prefill_book)
+
+                original_name = secure_filename(uploaded.filename)
+                ext = os.path.splitext(original_name)[1].lower()
+                unique_name = f"cover_{current_user.id}_{uuid4().hex}{ext}"
+                save_path = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'], unique_name)
+                uploaded.save(save_path)
+
+                # Store path relative to /static
+                cover = f"uploads/{unique_name}"
 
             if status == 'Reading Now' and not start_date:
                 flash('Please pick a start date.', 'error')
@@ -179,6 +199,85 @@ def get_cover_designs():
 
     return cover_designs
 
+
+def get_profile_pfps():
+    pfp_dir = os.path.join(app.static_folder, 'img', 'pfp')
+    if not os.path.isdir(pfp_dir):
+        return []
+    files = [f for f in os.listdir(pfp_dir) if allowed_file(f)]
+    files.sort(key=lambda s: s.lower())
+    return [os.path.join('img', 'pfp', f).replace('\\', '/') for f in files]
+
+
+def get_avatar_unlock_milestones(total_books_read: int, total_pages_read: int):
+    milestones = [
+        {'key': 'books_10', 'label': '10 books read', 'achieved': total_books_read >= 10},
+        {'key': 'books_5', 'label': '5 books read', 'achieved': total_books_read >= 5},
+        {'key': 'books_15', 'label': '15 books read', 'achieved': total_books_read >= 15},
+        {'key': 'books_20', 'label': '20 books read', 'achieved': total_books_read >= 20},
+        {'key': 'pages_500', 'label': '500 pages read', 'achieved': total_pages_read >= 500},
+        {'key': 'pages_2000', 'label': '2000 pages read', 'achieved': total_pages_read >= 2000},
+        {'key': 'pages_5000', 'label': '5000 pages read', 'achieved': total_pages_read >= 5000},
+        {'key': 'pages_7000', 'label': '7000 pages read', 'achieved': total_pages_read >= 7000},
+    ]
+    return milestones
+
+
+def get_avatar_pfp_options(total_books_read: int, total_pages_read: int):
+    pfps = get_profile_pfps()
+
+    ALWAYS_UNLOCK_FIRST = 4
+
+    rules = [
+        None,  # pfp1 (always unlocked)
+        None,  # pfp2 (always unlocked)
+        None,  # pfp3 (always unlocked)
+        None,  # pfp4 (always unlocked)
+        ('books', 5, '5 books read'),
+        ('books', 10, '10 books read'),
+        ('books', 15, '15 books read'),
+        ('books', 20, '20 books read'),
+        ('pages', 500, '500 pages read'),
+        ('pages', 2000, '2000 pages read'),
+        ('pages', 5000, '5000 pages read'),
+        ('pages', 7000, '7000 pages read'),
+    ]
+
+    options = []
+    for idx, path in enumerate(pfps):
+        if idx < ALWAYS_UNLOCK_FIRST:
+            options.append({
+                'path': path,
+                'unlocked': True,
+                'required_label': None,
+            })
+            continue
+
+        rule = rules[idx] if idx < len(rules) else rules[-1]
+        if rule is None:
+            unlocked = True
+            req_label = None
+        else:
+            kind, minimum, req_label = rule
+            if kind == 'books':
+                unlocked = total_books_read >= int(minimum)
+            else:
+                unlocked = total_pages_read >= int(minimum)
+
+        options.append({
+            'path': path,
+            'unlocked': bool(unlocked),
+            'required_label': req_label if not unlocked else None,
+        })
+
+    return options
+
+
+def is_valid_hex_color(value: str) -> bool:
+    if not value:
+        return False
+    return bool(re.fullmatch(r"#[0-9a-fA-F]{6}", value.strip()))
+
 @app.route('/book/<int:book_id>')
 @login_required
 def book_detail(book_id):
@@ -189,6 +288,30 @@ def book_detail(book_id):
     return render_template('book_detail.html', book=book)
 
 
+def log_pages_for_book(book: Book, pages_delta: int, log_date=None):
+    """Persist a positive page delta for a specific day."""
+    if not book:
+        return
+    try:
+        pages_to_log = int(pages_delta or 0)
+    except (TypeError, ValueError):
+        return
+    if pages_to_log <= 0:
+        return
+
+    log_day = log_date or datetime.utcnow().date()
+    if isinstance(log_day, datetime):
+        log_day = log_day.date()
+
+    entry = PageLog(
+        user_id=book.user_id,
+        book_id=book.id,
+        log_date=log_day,
+        pages=pages_to_log
+    )
+    db.session.add(entry)
+
+
 @app.route('/book/<int:book_id>/progress', methods=['POST'])
 @login_required
 def update_progress(book_id):
@@ -196,6 +319,8 @@ def update_progress(book_id):
     if book.user_id != current_user.id:
         flash('Not authorized to update this book', 'error')
         return redirect(url_for('mylist'))
+
+    old_pages_read = int(book.pages_read or 0)
 
     if (book.status or '').lower() != 'reading now':
         flash('Progress can only be updated for books that are Reading Now.', 'error')
@@ -249,6 +374,11 @@ def update_progress(book_id):
         if finish_date:
             book.finish_date = finish_date
 
+    new_pages_read = int(book.pages_read or 0)
+    pages_delta = new_pages_read - old_pages_read
+    log_date = finish_date if completed and finish_date else datetime.utcnow().date()
+    log_pages_for_book(book, pages_delta, log_date)
+
     try:
         db.session.commit()
         flash('Progress updated.', 'success')
@@ -265,6 +395,8 @@ def edit_book(book_id):
     if book.user_id != current_user.id:
         flash('Not authorized to edit this book', 'error')
         return redirect(url_for('index'))
+
+    old_pages_read = int(book.pages_read or 0)
     
     if request.method == 'POST':
         try:
@@ -284,6 +416,10 @@ def edit_book(book_id):
             pages_read = request.form.get('pages_read', 0)
             book.pages_read = int(pages_read) if pages_read else 0
             
+            new_pages_read = int(book.pages_read or 0)
+            pages_delta = new_pages_read - old_pages_read
+            log_pages_for_book(book, pages_delta, datetime.utcnow().date())
+
             db.session.commit()
             # Flash success message to user
             flash('Book updated successfully!', 'success')
@@ -313,7 +449,7 @@ def delete_book(book_id):
     
     # Redirect back to the appropriate page
     if was_wishlist:
-        return redirect(url_for('want_to_read'))
+        return redirect(url_for('profile', tab='wishlist'))
     return redirect(url_for('mylist'))
 
 @app.route('/book/<int:book_id>/change_status', methods=['POST'])
@@ -340,7 +476,7 @@ def change_status(book_id):
     
     # Redirect to appropriate page
     if (old_status or '').lower() == 'want to read' or new_status.lower() == 'want to read':
-        return redirect(url_for('want_to_read'))
+        return redirect(url_for('profile', tab='wishlist'))
     return redirect(url_for('mylist'))
 
 @app.route('/reading')
@@ -352,8 +488,13 @@ def reading():
 @app.route('/want_to_read', methods=['GET', 'POST'])
 @login_required
 def want_to_read():
-    cover_designs = get_cover_designs()
+    # Wishlist is embedded in the Profile page. Keep this endpoint only for compatibility:
+    # - GET redirects to Profile (Wishlist tab)
+    # - POST still creates wishlist entries then redirects back to Profile
     books = Book.query.filter_by(status='Want to Read', user_id=current_user.id).order_by(Book.title.asc()).all()
+
+    if request.method == 'GET':
+        return redirect(url_for('profile', tab='wishlist'))
 
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
@@ -366,7 +507,7 @@ def want_to_read():
 
         if not title or not author:
             flash('Title and Author are required.', 'error')
-            return render_template('want_to_read.html', books=books, cover_designs=cover_designs)
+            return redirect(url_for('profile', tab='wishlist'))
 
         try:
             pages = int(pages_raw) if pages_raw else 0
@@ -392,12 +533,11 @@ def want_to_read():
             db.session.add(new_book)
             db.session.commit()
             flash('Book saved to Want to Read.', 'success')
-            return redirect(url_for('want_to_read'))
+            return redirect(url_for('profile', tab='wishlist'))
         except Exception as exc:
             db.session.rollback()
             flash(f'Could not save book: {exc}', 'error')
-
-    return render_template('want_to_read.html', books=books, cover_designs=cover_designs)
+            return redirect(url_for('profile', tab='wishlist'))
 
 @app.route('/finished')
 @login_required
@@ -503,6 +643,12 @@ def profile():
         Book.user_id == current_user.id,
         Book.status.in_(['Already Read', 'Finished'])
     ).order_by(Book.finish_date.desc().nullslast()).all()
+
+    # Wishlist books
+    wishlist_books = Book.query.filter_by(
+        status='Want to Read',
+        user_id=current_user.id
+    ).order_by(Book.title.asc()).all()
     
     # Calculate stats for Instagram-style display
     all_books = Book.query.filter(
@@ -512,13 +658,63 @@ def profile():
     
     total_books_read = len([b for b in all_books if is_completed(b.status)])
     total_pages_read = sum(effective_pages_read(book) for book in all_books)
+
+    pfp_options = get_avatar_pfp_options(total_books_read, total_pages_read)
+    milestones = get_avatar_unlock_milestones(total_books_read, total_pages_read)
     
     return render_template('profile.html', 
                          reading_now=reading_now,
                          already_read=already_read,
+                         wishlist_books=wishlist_books,
+                         pfp_options=pfp_options,
+                         avatar_milestones=milestones,
                          user=current_user,
                          total_books_read=total_books_read,
                          total_pages_read=total_pages_read)
+
+
+@app.route('/profile/avatar', methods=['POST'])
+@login_required
+def profile_avatar():
+    selected_pfp = (request.form.get('pfp') or '').strip()
+    bg_color = (request.form.get('pfp_bg') or '').strip()
+
+    # Recompute unlock state server-side to prevent selecting locked avatars
+    all_books = Book.query.filter(
+        Book.user_id == current_user.id,
+        Book.status != 'Want to Read'
+    ).all()
+    total_books_read = len([b for b in all_books if (b.status or '').lower() in {'already read', 'finished'}])
+    total_pages_read = db.session.query(db.func.sum(PageLog.pages)).filter(PageLog.user_id == current_user.id).scalar() or 0
+    if not total_pages_read:
+        total_pages_read = sum(max(0, int(b.pages_read or 0)) for b in all_books)
+
+    pfp_options = get_avatar_pfp_options(int(total_books_read), int(total_pages_read))
+    allowed_pfps = {opt['path'] for opt in pfp_options}
+    unlocked_pfps = {opt['path'] for opt in pfp_options if opt['unlocked']}
+
+    if selected_pfp not in allowed_pfps:
+        flash('Please choose a valid profile picture.', 'error')
+        return redirect(url_for('profile'))
+
+    if selected_pfp not in unlocked_pfps:
+        flash('That avatar is not unlocked yet.', 'error')
+        return redirect(url_for('profile'))
+
+    if bg_color and not is_valid_hex_color(bg_color):
+        flash('Please choose a valid background color.', 'error')
+        return redirect(url_for('profile'))
+
+    current_user.profile_picture = selected_pfp
+    current_user.profile_bg_color = bg_color or None
+    try:
+        db.session.commit()
+        flash('Profile picture updated.', 'success')
+    except Exception as exc:
+        db.session.rollback()
+        flash(f'Could not update profile picture: {exc}', 'error')
+
+    return redirect(url_for('profile'))
 
 @app.route('/stats')
 @login_required
@@ -552,6 +748,9 @@ def stats():
     completed = [book for book in books if is_completed(book.status)]
 
     pages_read_total = sum(effective_pages_read(book) for book in books)
+    logged_pages_total = db.session.query(db.func.sum(PageLog.pages)).filter(PageLog.user_id == current_user.id).scalar() or 0
+    if logged_pages_total:
+        pages_read_total = int(logged_pages_total)
 
     ratings = [book.rating for book in completed if book.rating is not None]
     avg_rating = round(sum(ratings) / len(ratings), 2) if ratings else None
@@ -633,19 +832,18 @@ def stats():
             'delta': count_now - count_prev,
         }
 
-    # Pages read per month (Spotify-wrapped-like view)
+    # Pages read per month derived from per-day logs.
     monthly_pages = [0] * 12
-    for book in books:
-        status_lower = (book.status or '').lower()
-        if is_completed(status_lower):
-            if book.finish_date and book.finish_date.year == chart_year:
-                idx = book.finish_date.month - 1
-                monthly_pages[idx] += effective_pages_read(book)
-        elif status_lower == 'reading now':
-            # Without per-day logs we can only attribute current progress.
-            # Put current progress into the current month.
-            if today.year == chart_year:
-                monthly_pages[today.month - 1] += max(0, int(book.pages_read or 0))
+    logs_this_year = PageLog.query.filter(
+        PageLog.user_id == current_user.id,
+        PageLog.log_date >= date(chart_year, 1, 1),
+        PageLog.log_date < date(chart_year + 1, 1, 1)
+    ).all()
+    for log in logs_this_year:
+        if log.log_date:
+            monthly_pages[log.log_date.month - 1] += int(log.pages or 0)
+
+    monthly_logs_used = any(monthly_pages)
 
     max_month_pages = max(monthly_pages) if monthly_pages else 0
     month_labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -662,41 +860,21 @@ def stats():
 
     pages_read_this_month = monthly_pages[today.month - 1] if today.year == chart_year else 0
 
-    # Daily pages read for current month (estimated distribution)
-    # Use floats during accumulation to avoid losing data due to int truncation.
-    daily_pages: dict[int, float] = {}
+    # Daily pages read for current month based on logs.
     days_in_month = (next_month_start - month_start).days
-    for day_offset in range(days_in_month):
-        day_date = month_start + timedelta(days=day_offset)
-        daily_pages[day_date.day] = 0.0
-    
-    # Distribute pages from completed books across their reading period
-    for book in completed:
-        if book.finish_date and month_start <= book.finish_date < next_month_start:
-            pages = effective_pages_read(book)
-            if book.start_date and book.finish_date:
-                reading_days = (book.finish_date - book.start_date).days + 1
-                if reading_days > 0:
-                    pages_per_day = pages / reading_days
-                    # Distribute pages across days in current month
-                    for day_offset in range(days_in_month):
-                        day_date = month_start + timedelta(days=day_offset)
-                        if book.start_date <= day_date <= book.finish_date:
-                            daily_pages[day_date.day] += float(pages_per_day)
-    
-    # Add current reading progress to today
-    for book in reading_now:
-        if book.start_date:
-            reading_days = (today - book.start_date).days + 1
-            if reading_days > 0 and month_start <= today < next_month_start:
-                pages = max(0, int(book.pages_read or 0))
-                pages_per_day = pages / reading_days
-                for day_offset in range(days_in_month):
-                    day_date = month_start + timedelta(days=day_offset)
-                    if book.start_date <= day_date <= today:
-                        daily_pages[day_date.day] += float(pages_per_day)
-    
-    # Convert to list format for template
+    daily_pages: dict[int, float] = {day: 0.0 for day in range(1, days_in_month + 1)}
+
+    logs_this_month = PageLog.query.filter(
+        PageLog.user_id == current_user.id,
+        PageLog.log_date >= month_start,
+        PageLog.log_date < next_month_start
+    ).all()
+    for log in logs_this_month:
+        if log.log_date and month_start <= log.log_date < next_month_start:
+            daily_pages[log.log_date.day] += float(log.pages or 0)
+
+    daily_logs_used = any(value > 0 for value in daily_pages.values())
+
     daily_series = []
     max_daily_pages = max(daily_pages.values()) if daily_pages else 0.0
     for day in range(1, days_in_month + 1):
@@ -728,8 +906,10 @@ def stats():
         'prev_month_label': prev_month_start.strftime('%B %Y'),
         'chart_year': chart_year,
         'monthly': monthly_series,
+        'monthly_logs_used': bool(monthly_logs_used),
         'monthly_max_pages': int(max_month_pages),
         'daily': daily_series,
+        'daily_logs_used': bool(daily_logs_used),
         'daily_max_pages': int(round(max_daily_pages)),
         'days_in_month': days_in_month,
     }
@@ -792,6 +972,17 @@ def ensure_retailer_link_column():
     except Exception as exc:
         app.logger.warning('Could not ensure retailer_link column: %s', exc)
 
+
+def ensure_profile_bg_color_column():
+    try:
+        result = db.session.execute(text("PRAGMA table_info(user)"))
+        columns = {row[1] for row in result}
+        if 'profile_bg_color' not in columns:
+            db.session.execute(text("ALTER TABLE user ADD COLUMN profile_bg_color VARCHAR(32)"))
+            db.session.commit()
+    except Exception as exc:
+        app.logger.warning('Could not ensure profile_bg_color column: %s', exc)
+
 # Create tables before the first request
 with app.app_context():
     db.create_all()
@@ -805,6 +996,8 @@ with app.app_context():
             db.session.commit()
     except Exception as exc:
         app.logger.warning('Could not ensure profile_picture column: %s', exc)
+
+    ensure_profile_bg_color_column()
 
 if __name__ == '__main__':
     app.run(debug=True)

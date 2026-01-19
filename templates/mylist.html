@@ -115,9 +115,9 @@
                 <img src="{{ url_for('static', filename=book.cover if book.cover else 'img/book0.png') }}" alt="{{ book.title }} cover">
             </div>
             <!-- Book title and author information -->
-            <div class="book-meta">
-                <h3>{{ book.title }}</h3>
-                <p class="author">by {{ book.author }}</p>
+            <div class="book-info">
+                <h3 class="book-title">{{ book.title }}</h3>
+                <p class="book-author">by {{ book.author }}</p>
             </div>
             <!-- Quick action buttons -->
             <div class="card-actions">

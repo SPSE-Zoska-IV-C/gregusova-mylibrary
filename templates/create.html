@@ -103,10 +103,10 @@
                              checked
                            {% endif %}
                            {% if not ns.rendered_first_variant and loop.first %}required{% endif %}>
-                    <div class="color-dot{% if is_selected or (not selected_cover and not ns.rendered_first_variant and loop.first) %} selected{% endif %}" 
-                         style="background-image: url('{{ url_for('static', filename=variant.file) }}');"
-                         data-preview-src="{{ url_for('static', filename=variant.file) }}">
-                    </div>
+                        <div class="color-dot{% if is_selected or (not selected_cover and not ns.rendered_first_variant and loop.first) %} selected{% endif %}"
+                          data-swatch="{{ variant.label }}"
+                          data-preview-src="{{ url_for('static', filename=variant.file) }}">
+                        </div>
                   </label>
                   {% if not selected_cover and not ns.rendered_first_variant and loop.first %}
                     {% set ns.rendered_first_variant = true %}
@@ -119,6 +119,36 @@
               </div>
             </div>
             {% endfor %}
+
+            {# Custom uploaded cover (no color variants) #}
+            {% set custom_selected = selected_cover == '__custom__' %}
+            <div class="cover-design-card cover-design-card--custom{% if custom_selected %} is-selected{% endif %}" data-design="custom">
+              <div class="cover-design-wrapper">
+                <div class="cover-display">
+                  <label class="cover-custom-area" for="custom-cover-file">
+                    <input
+                      type="radio"
+                      name="cover"
+                      value="__custom__"
+                      id="custom-cover-radio"
+                      class="cover-custom-radio"
+                      {% if custom_selected %}checked{% endif %}>
+
+                    <input
+                      type="file"
+                      name="custom_cover"
+                      id="custom-cover-file"
+                      class="cover-custom-file"
+                      accept="image/*">
+
+                    <div class="cover-custom-ui" aria-hidden="true">
+                      <div class="cover-custom-plus">+</div>
+                      <div class="cover-custom-text">Add cover</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
           {% else %}
           <p class="cover-empty-state">No cover designs available right now.</p>

@@ -1,99 +1,105 @@
-3. Použité aplikácie a technológie
+    3 Použité aplikácie a technológie
+    Pri realizácii projektu boli použité nástroje a technológie, 
+ktoré sú široko podporované a vhodné pre tvorbu webových aplikácií. 
+Výber technológií bol vedený požiadavkou jednoduchosti, stability 
+a dobrej dokumentácie.
+       Python a Flask
+    Jadrom aplikácie je programovací jazyk Python vo verzii 3.11.9, 
+ktorý patrí medzi najpopulárnejšie jazyky pre vývoj webových 
+aplikácií vďaka čitateľnej syntaxi a širokému výberu knižníc. 
+Na stavbu webovej aplikácie sme zvolili mikroframework Flask, 
+ktorý poskytuje základné nástroje pre routing, templating, 
+no zároveň ponecháva voľnosť pri výbere ďalších komponentov. 
+Flask sme zvolili, pretože je ideálny pre tvorbu menších až 
+stredných projektov. Flask má systém šablón Jinja2, ktorý umožňuje 
+oddelenie prezentačnej logiky od aplikačnej logiky a zjednodušuje 
+prácu s obsahom v HTML. Podporuje aj rozšírenia, ktoré rozširujú 
+funkcionalitu frameworku o autentifikáciu, správu relácií a prácu 
+s databázami.
 
-Pri realizácii projektu boli použité moderné, osvedčené nástroje a technológie, ktoré sú široko podporované a
-vhodné pre tvorbu webových aplikácií. Výber technológií bol vedený požiadavkou jednoduchosti, stability a
-dobrej dokumentácie, čo je podstatné najmä v kontexte vzdelávacieho projektu.
-
-3.1 Python a Flask
-
-Jadrom aplikácie je programovací jazyk Python vo verzii 3.x, ktorý patrí medzi najpopulárnejšie jazyky pre
-vývoj webových aplikácií vďaka čitateľnej syntaxi a bohatému ekosystému knižníc. Na stavbu webovej aplikácie
-bol zvolený mikroframework Flask, ktorý poskytuje základné nástroje pre routing, templating a prácu s HTTP
-požiadavkami, pričom ponecháva vývojárovi voľnosť pri výbere ďalších komponentov. Flask je ideálny pre menšie
-až stredné projekty, kde nie je potrebná plná funkcionalita veľkých frameworkov ako Django.
-
-Flask prináša systém šablón Jinja2, ktorý umožňuje oddelenie prezentačnej logiky od aplikačnej logiky a
-zjednodušuje prácu s dynamickým obsahom v HTML. Podporuje aj extensiony, ktoré rozširujú funkcionalitu
-frameworku o autentifikáciu, správu relácií a prácu s databázami.
 
 3.2 SQLite a SQLAlchemy
-
-Pre uchovávanie dát aplikácia využíva relačnú databázu SQLite, ktorá je vďaka svojej jednoduchosti ideálna pre
-lokálne nasadenie. SQLite neukladá dáta na vzdialený databázový server, ale do jediného súboru, čo zjednodušuje
-zálohovanie, migráciu a prenositeľnosť celej aplikácie. Pre komunikáciu s databázou je použitá ORM knižnica
-SQLAlchemy, ktorá umožňuje pracovať s databázovými záznamami objektovo-orientovaným spôsobom a eliminuje potrebu
-písať priamo SQL dotazy. Tým sa zvyšuje čitateľnosť kódu a znižuje riziko chýb.
-
-Flask-SQLAlchemy je rozšírenie, ktoré integruje SQLAlchemy do prostredia Flasku a poskytuje pohodlné nástroje
-na definíciu modelov, migráciu schémy a prácu s reláciami medzi entitami.
-
+    Pre uchovávanie dát aplikácia využíva relačnú databázu SQLite, 
+ktorá je vďaka svojej jednoduchosti ideálna pre menšie projekty, 
+ako je tento. SQLite neukladá dáta na vzdialený databázový server, 
+ale do jediného súboru, čo zjednodušuje zálohovanie, migráciu 
+a prenositeľnosť celej aplikácie. Pre komunikáciu s databázou je 
+použitá knižnica SQLAlchemy, ktorá umožňuje pracovať s databázovými 
+záznamami objektovo-orientovaným spôsobom tým pádom nie je potrebné 
+písať priamo SQL dotazy. Tým sa zvyšuje čitateľnosť kódu a znižuje 
+riziko chýb. Flask-SQLAlchemy je rozšírenie, ktoré integruje 
+SQLAlchemy do prostredia Flasku.
 3.3 Autentifikácia a bezpečnosť
-
-Pre správu používateľských účtov a autentifikáciu je využitá knižnica Flask-Login, ktorá zjednodušuje prácu s
-prihlasovaním, odhlasovaním a ochranou konkrétnych častí aplikácie pred neautorizovaným prístupom. Heslá sú v
-databáze ukladané v hashovanej podobe pomocou knižnice Werkzeug, ktorá je súčasťou Flasku a poskytuje funkcie
-pre bezpečné hashovanie pomocou moderných algoritmov (PBKDF2, bcrypt).
-
-Pri práci s formulármi je aplikácia chránená proti CSRF (Cross-Site Request Forgery) útokom pomocou Flask-WTF,
-rozšírenia, ktoré integruje knižnicu WTForms. Tá zároveň zjednodušuje validáciu vstupov na strane servera a
-generovanie formulárových polí v šablónach.
-
+    Pre správu používateľských účtov a autentifikáciu je využitá 
+knižnica Flask-Login, ktorá zjednodušuje prácu s prihlasovaním, 
+odhlasovaním a ochranou konkrétnych častí aplikácie pred 
+neautorizovaným prístupom. Heslá sú v databáze ukladané v hashovanej 
+podobe pomocou knižnice Werkzeug, ktorá je súčasťou Flasku 
+a poskytuje funkcie pre bezpečné hashovanie pomocou algoritmov 
+(PBKDF2, bcrypt). Pri práci s formulármi je aplikácia chránená 
+proti CSRF (Cross-Site Request Forgery) útokom pomocou Flask-WTF. 
+Flask-WTF je rozšírenie, ktoré integruje knižnicu WTForms. 
+Tá zároveň zjednodušuje validáciu vstupov na strane servera 
+a generovanie formulárových polí v šablónach.
 3.4 HTML a CSS
+    Prezentačná vrstva aplikácie je postavená na HTML5 a CSS3. 
+Pre štýlovanie je použité vlastné CSS, ktoré umožňuje vytvoriť 
+jednotný vzhľad aplikácie. Zároveň nám dáva plnú kontrolu nad 
+dizajnom používateľského rozhrania. Štýly sú organizované tak, 
+aby aplikácia bola responzívna a správne sa zobrazovala na rôznych 
+zariadeniach a veľkostiach obrazoviek. HTML štruktúra aplikácie 
+využíva sémantické elementy ako <header>, <main>, <nav> a <section>, 
+čo zlepšuje čitateľnosť kódu. Šablóny sú organizované do základného 
+layout súboru, z ktorého dedia ostatné stránky, čo zabezpečuje 
+konzistentný vzhľad a znižuje duplicitu kódu.
 
-Prezentačná vrstva aplikácie je postavená na HTML5 a CSS3. Pre štýlovanie je použité vlastné CSS, ktoré
-zabezpečuje jednotný vzhľad aplikácie a umožňuje plnú kontrolu nad dizajnom používateľského rozhrania.
-Štýly sú organizované tak, aby aplikácia bola responzívna a správne sa zobrazovala na rôznych zariadeniach
-a veľkostiach obrazoviek. HTML štruktúra aplikácie využíva sémantické elementy ako <header>, <main>, <nav> a <section>, čo zlepšuje čitateľnosť kódu a prístupnosť pre asistenčné technológie. Šablóny sú organizované do základného layout súboru, z ktorého dedia ostatné stránky, čo zabezpečuje konzistentný vzhľad a znižuje duplicitu kódu.
 
-
-3.5 Vývojové nástroje a prostredie
-
-Na vývoj aplikácie bol použitý textový editor Visual Studio Code, ktorý ponúka rozšírenia pre prácu s Pythonom,
-zvýrazňovanie syntaxe, integrovaný terminál a podporu pre ladenie kódu. Na správu závislostí projektu slúži
-súbor requirements.txt, ktorý obsahuje zoznam všetkých potrebných Python knižníc spolu s ich verziami, čo
-uľahčuje reprodukovateľnosť prostredia na rôznych systémoch.
-
-Pre verzovanie kódu a zálohovanie bol použitý systém Git, ktorý umožňuje sledovanie zmien a návrat k
-predchádzajúcim verziám v prípade potreby.
-
+    Na vývoj aplikácie bol použitý textový editor Visual Studio 
+Code, ktorý ponúka rozšírenia pre prácu s Pythonom, zvýrazňovanie 
+syntaxe, integrovaný terminál a podporu pre ladenie kódu. 
+Na správu závislostí projektu slúži súbor requirements.txt, 
+ktorý obsahuje zoznam všetkých potrebných knižníc spolu s ich 
+verziami, čo uľahčuje reprodukovateľnosť prostredia na rôznych 
+systémoch (alebo pri nahrávaní na verejnú doménu). 
+Pre zálohovanie bol použitý systém Git (platform GitHub), 
+ktorý umožňuje sledovanie zmien a návrat k predchádzajúcim verziám 
+v prípade potreby.
 3.6 Správa súborov a nahrávanie obrázkov
+    Obálky kníh sú nahrávané cez štandardný HTML formulár s typom 
+input file a ukladané na server do vyhradené priečinka 
+(static/uploads). Pri nahrávaní sa kontroluje typ súboru 
+(povolené formáty PNG, JPG, JPEG, GIF) a následne sa súbor uloží 
+pod bezpečným názvom generovaným knižnicou Werkzeug. 
+Takto sa predchádza kolíziám názvov aj potenciálnym bezpečnostným 
+rizikám.
+3.7 Grafické prvky a dizajnom
+    Pri tvorbe vizuálnej stránky aplikácie bol využitý grafický 
+program ArtRage, ktorý je určený na digital art tvorbu. 
+Slúžil na vytvorenie vlastných ikon a grafických prvkov 
+používateľského rozhnia. Pomocou tohto nástroja boli navrhnuté 
+obálky kníh, ktoré sú použité ako obrázky, ktoré môže používateľ 
+zvoliť ako zobrazenú „obálku", ak používateľ nenahrá vlastnú obálku. 
+Taktiež bol použitý na vytvorenie avatarov na profilový obrázok 
+a jeho orámovanie, či ikony trofeí Tieto grafické prvky boli 
+vytvorené s dôrazom na estetickú konzistenciu a jednoduché, 
+intuitívne ikony.
+3.8 JavaScript
+    V aplikácii je využitý aj JavaScript, ktorý slúži na vylepšenie 
+interaktivity používateľského rozhrania na strane klienta. 
+Hoci hlavná logika aplikácie beží na serveri pomocou Flasku, 
+JavaScript poskytuje okamžitú spätnú väzbu používateľovi a zlepšuje 
+celkovú používateľskú skúsenosť bez nutnosti opätovného načítania 
+stránky. JavaScript je v projekte využitý najmä na dynamickú 
+validáciu formulárov pred ich odoslaním na server, čo umožňuje 
+okamžité upozornenie používateľa na chyby vo vstupoch ešte pred tým, 
+než sú dáta odoslané. JavaScript taktiež umožňuje náhľad vybraného 
+obrázka pred jeho nahratím, čo používateľovi umožňuje skontrolovať 
+vybraný súbor ešte pred odoslaním formulára. Kód je napísaný 
+v JavaScripte bez použitia externých frameworkov, čo znižuje 
+závislosť na externých knižniciach a zjednodušuje údržbu projektu. 
+Všetky JavaScriptové skripty sú umiestnené v samostatných súboroch 
+v priečinku static/js a sú načítavané v HTML šablónach podľa potreby 
+konkrétnej stránky.
 
-Obálky kníh sú nahrávané cez štandardný HTML formulár s typom input file a ukladané na server do vyhradené
-priečinka (static/uploads). Pri nahrávaní sa kontroluje typ súboru (povolené formáty PNG, JPG, JPEG, GIF) a
-následne sa súbor uloží pod bezpečným názvom generovaným knižnicou Werkzeug. Takto sa predchádza kolíziám názvov
-aj potenciálnym bezpečnostným rizikám.
+Prakticka cast
 
-3.7 Grafické prvky a dizajn
-
-Pri tvorbe vizuálnej stránky aplikácie bol využitý grafický program ArtRage, ktorý slúžil na vytvorenie
-vlastných ikon a grafických prvkov používateľského rozhnia. Pomocou tohto nástroja boli navrhnuté aj
-vizualizácie obálok kníh, ktoré sú použité ako predvolené obrázky v prípade, že používateľ nenahrá vlastnú obálku. Tieto grafické prvky boli vytvorené s dôrazom na estetickú konzistenciu a jednoduché, intuitívne ikony, ktoré podporujú celkovú používateľskú skúsenosť.
-
-3,8
-JavaScript
-
-V aplikácii je využitý aj programovací jazyk JavaScript, ktorý slúži na vylepšenie interaktivity používateľského rozhrania na strane klienta. Hoci hlavná logika aplikácie beží na serveri pomocou Flasku, JavaScript poskytuje okamžitú spätnú väzbu používateľovi a zlepšuje celkovú používateľskú skúsenosť bez nutnosti opätovného načítania stránky.
-
-JavaScript je v projekte využitý najmä na dynamickú validáciu formulárov pred ich odoslaním na server, čo umožňuje okamžité upozornenie používateľa na chyby vo vstupoch ešte pred tým, než sú dáta odoslané. Ďalej sa používa na interaktívne prvky ako potvrdzovacie dialógy pri mazaní záznamov, čo pomáha predchádzať neúmyselnej strate dát. JavaScript taktiež umožňuje náhľad vybraného obrázka pred jeho nahratím, čo používateľovi umožňuje skontrolovať vybraný súbor ešte pred odoslaním formulára.
-
-Okrem toho JavaScript zabezpečuje dynamické zobrazovanie a skrývanie prvkov rozhrania na základe akcií používateľa a prispieva k vylepšeniu navigácie a plynulosti prechodu medzi rôznymi časťami aplikácie. Kód je napísaný vo vanilla JavaScripte bez použitia externých frameworkov, čo znižuje závislosť na externých knižniciach a zjednodušuje údržbu projektu. Všetky JavaScriptové skripty sú umiestnené v samostatných súboroch v priečinku static/js a sú načítavané v HTML šablónach podľa potreby konkrétnej stránky.
-3.9 Lokálne nasadenie a testovanie
-
-Aplikácia je navrhnutá primárne pre lokálne nasadenie a bežne sa spúšťa cez vstavaný vývojový server Flasku.
-Ten umožňuje rýchle testovanie zmien a sledovanie požiadaviek v reálnom čase. Pre produkčné nasadenie by bolo
-vhodné použiť WSGI server ako Gunicorn alebo uWSGI, no v kontexte osobného nástroja postačuje lokálne
-spustenie.
-
-Testovanie funkčnosti prebiehalo manuálne cez prehliadač, pričom sa overovala správnosť operácií CRUD,
-funkčnosť prihlásenia, odhlásenia, ochrany chránených stránok a správanie pri neplatných vstupoch.
-
-3.10 Dokumentácia a štandardy
-
-Kód aplikácie je písaný v súlade s PEP 8, štandardom pre štýl písania v Pythone, čo zahŕňa pravidlá
-pomenovania, odsadzovania, dokumentačných reťazcov a komentárov. HTML šablóny dodržiavajú sémantické značky a
-ARIA atribúty pre lepšiu dostupnosť. Bootstrap triedy sú použité konzistentne, čo zabezpečuje jednotný vzhľad
-naprieč celou aplikáciou.
-
-Súhrnne možno povedať, že použitý technologický stack je vyvážený, osvedčený a dobre zdokumentovaný. Kombinácia
-Flasku, SQLite, Bootstrapu a podporných knižníc umožňuje rýchly vývoj, jednoduché nasadenie a udržateľnosť
-kódu, čo sú kľúčové faktory pre úspešnú realizáciu projektu v rámci maturitnej práce.

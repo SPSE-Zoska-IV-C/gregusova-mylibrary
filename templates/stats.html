@@ -69,33 +69,42 @@
 				<button type="button" class="toggle-btn" id="monthlyToggle" data-view="monthly">By Month</button>
 			</div>
 		</div>
-
-		<!-- Daily View -->
 		<div class="chart-container" id="dailyChart">
-			<div class="chart chart-daily" role="img" aria-label="Pages read per day this month">
+			<div class="chart chart-daily" aria-label="Pages read by day">
 				{% for item in stats.daily %}
-				<div class="bar-item" data-day="{{ item.day }}" title="Day {{ item.day }}: {{ item.pages }} pages">
-					<div class="bar" style="height: {{ item.pct }}%"></div>
-					<span class="bar-label">{{ item.day }}</span>
-					<span class="bar-pages">{{ item.pages }}</span>
+				<div class="bar-item" title="Day {{ item.day }}: {{ item.pages }} pages">
+					<div class="bar-wrap">
+						<div class="bar" data-pct="{{ item.pct }}"></div>
+					</div>
+					<div class="bar-label">{{ item.day }}</div>
+					<div class="bar-pages">{{ item.pages }}</div>
 				</div>
 				{% endfor %}
 			</div>
-			<p class="chart-note">{{ stats.month_label }} • Daily reading progress</p>
+			{% if not stats.daily_logs_used %}
+			<p class="chart-note">No page logs yet for {{ stats.month_label }}.</p>
+			{% else %}
+			<p class="chart-note">{{ stats.month_label }} (from page logs)</p>
+			{% endif %}
 		</div>
 
-		<!-- Monthly View -->
 		<div class="chart-container" id="monthlyChart" hidden>
-			<div class="chart chart-monthly" role="img" aria-label="Pages read per month this year">
+			<div class="chart chart-monthly" aria-label="Pages read by month">
 				{% for item in stats.monthly %}
-				<div class="bar-item" data-month="{{ item.label }}" title="{{ item.label }}: {{ item.pages }} pages">
-					<div class="bar" style="height: {{ item.pct }}%"></div>
-					<span class="bar-label">{{ item.label }}</span>
-					<span class="bar-pages">{{ item.pages }}</span>
+				<div class="bar-item" title="{{ item.label }}: {{ item.pages }} pages">
+					<div class="bar-wrap">
+						<div class="bar" data-pct="{{ item.pct }}"></div>
+					</div>
+					<div class="bar-label">{{ item.label }}</div>
+					<div class="bar-pages">{{ item.pages }}</div>
 				</div>
 				{% endfor %}
 			</div>
-			<p class="chart-note">{{ stats.chart_year }} • Monthly reading progress</p>
+			{% if not stats.monthly_logs_used %}
+			<p class="chart-note">No page logs yet for {{ stats.chart_year }}.</p>
+			{% else %}
+			<p class="chart-note">{{ stats.chart_year }} (from page logs)</p>
+			{% endif %}
 		</div>
 	</section>
 
@@ -115,16 +124,23 @@
 				{% for genre in stats.genre_data %}
 					{% set color = colors[loop.index0 % colors|length] %}
 					<div class="legend-item" data-genre="{{ genre.name }}" data-percentage="{{ genre.percentage }}" data-color="{{ color }}">
-						<span class="legend-color" style="background-color: {{ color }}"></span>
+						<span class="legend-color"></span>
 						<span class="legend-label">{{ genre.name }}</span>
 						<span class="legend-value">{{ genre.percentage }}%</span>
 					</div>
 				{% endfor %}
 			</div>
 		</div>
+		<script type="application/json" id="genreDataJson">{{ stats.genre_data | tojson }}</script>
 		<script>
 		(function() {
-			const genreData = {{ stats.genre_data | tojson }};
+			const dataEl = document.getElementById('genreDataJson');
+			let genreData = [];
+			try {
+				genreData = JSON.parse(dataEl ? dataEl.textContent : '[]');
+			} catch (e) {
+				genreData = [];
+			}
 			const colors = ['#a36b62', '#b98174', '#d4b5a8', '#e2c9bf', '#8e5a52', '#c9a88f', '#9d7a6b', '#b89a8a'];
 			const svg = document.getElementById('genrePieChart');
 			if (!svg || !genreData || genreData.length === 0) return;

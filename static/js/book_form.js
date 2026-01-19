@@ -95,6 +95,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const coverRadios = document.querySelectorAll('input[name="cover"]');
   const designCards = document.querySelectorAll('.cover-design-card');
 
+  const customCoverRadio = document.getElementById('custom-cover-radio');
+  const customCoverFile = document.getElementById('custom-cover-file');
+  const customCoverCard = document.querySelector('.cover-design-card--custom');
+
   const updateCoverPreview = (radio) => {
     if (!radio || !radio.dataset.previewSrc) return;
     
@@ -122,6 +126,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Update cover preview
     updateCoverPreview(targetInput);
+
+    // Custom upload card selected state
+    if (customCoverCard && customCoverRadio) {
+      customCoverCard.classList.toggle('is-selected', customCoverRadio.checked);
+    }
   };
 
   coverRadios.forEach((radio) => {
@@ -153,4 +162,14 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
+
+  // Custom cover: selecting a file should select the custom radio option
+  if (customCoverFile && customCoverRadio) {
+    customCoverFile.addEventListener('change', () => {
+      if (customCoverFile.files && customCoverFile.files.length) {
+        customCoverRadio.checked = true;
+        updateSelectionState(customCoverRadio);
+      }
+    });
+  }
 });
