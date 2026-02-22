@@ -133,16 +133,10 @@
 			</svg>
 			<div class="pie-legend">
 				{% for genre in stats.genre_data %}
-					{% set parts = genre.name.split(',') %}
-					{% set main_genre = parts[0].strip() %}
-					{% set sub_genres = parts[1:]|list %}
-					<div class="legend-item" data-group="{{ main_genre }}" data-genre="{{ genre.name }}" data-percentage="{{ genre.percentage }}">
+					<div class="legend-item" data-group="{{ genre.name }}" data-genre="{{ genre.name }}" data-percentage="{{ genre.percentage }}">
 						<span class="legend-color"></span>
 						<span class="legend-label">
-							<span class="legend-main">{{ main_genre }}</span>
-							{% if sub_genres %}
-								<span class="legend-sub">{{ sub_genres|join(', ') }}</span>
-							{% endif %}
+							<span class="legend-main">{{ genre.name }}</span>
 						</span>
 						<span class="legend-value">{{ genre.percentage }}%</span>
 					</div>
