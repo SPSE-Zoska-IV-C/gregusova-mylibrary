@@ -172,4 +172,157 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  // =====================
+  // Genre tag selection
+  // =====================
+  const mainGenres = [
+    'Fiction',
+    'Non-fiction',
+    'Fantasy',
+    'Science Fiction',
+    'Romance',
+    'Mystery / Crime',
+    'Thriller / Suspense',
+    'Horror',
+    'Historical',
+    'Children’s / Young Adult'
+  ];
+
+  const subGenres = {
+    'Fiction': ['Literary fiction', 'Contemporary fiction', 'Short stories', 'Drama', 'Adventure'],
+    'Non-fiction': ['Biography / Memoir', 'Self-help', 'History', 'Science', 'Essays'],
+    'Fantasy': ['High fantasy', 'Urban fantasy', 'Dark fantasy', 'Epic fantasy', 'Mythological fantasy'],
+    'Science Fiction': ['Dystopian', 'Space opera', 'Cyberpunk', 'Time travel', 'Hard science fiction'],
+    'Romance': ['Contemporary romance', 'Historical romance', 'Romantic comedy', 'Paranormal romance', 'Young adult romance'],
+    'Mystery / Crime': ['Detective fiction', 'Cozy mystery', 'Police procedural', 'True crime', 'Noir'],
+    'Thriller / Suspense': ['Psychological thriller', 'Political thriller', 'Legal thriller', 'Spy thriller', 'Action thriller'],
+    'Horror': ['Psychological horror', 'Supernatural horror', 'Gothic horror', 'Monster horror', 'Cosmic horror'],
+    'Historical': ['Historical fiction', 'Historical romance', 'Alternate history', 'War fiction', 'Biographical fiction'],
+    'Children’s / Young Adult': ['Picture books', 'Middle grade', 'Young adult fiction', 'Educational', 'Coming-of-age']
+  };
+
+  const MAX_TAGS = 5;
+  // Base/selected colors per main genre; adjust to your palette
+  
+  const mainList = document.getElementById('genre-main-list');
+  const subList = document.getElementById('genre-sub-list');
+  const selectedWrap = document.getElementById('genre-selected');
+  const genresInput = document.getElementById('genre');
+
+  if (mainList && subList && selectedWrap && genresInput) {
+    // Reverse lookup tag->group for prefill
+    const tagToGroup = new Map();
+    mainGenres.forEach((g) => tagToGroup.set(g, g));
+    Object.entries(subGenres).forEach(([g, subs]) => subs.forEach((t) => tagToGroup.set(t, g)));
+
+    const selected = new Map(); // tag -> group
+    (window.__MYLIBRARY__?.initialGenres || []).forEach((t) => {
+      const grp = tagToGroup.get(t) || null;
+      selected.set(t, grp);
+    });
+
+    function applyColors(el, group) {
+    // Colors are controlled purely via CSS using data-group attributes.
+    }
+
+    function renderSelected() {
+      selectedWrap.innerHTML = '';
+      if (!selected.size) return;
+      selected.forEach((group, tag) => {
+        const pill = document.createElement('button');
+        pill.type = 'button';
+        pill.className = 'tag-pill selected';
+        pill.setAttribute('aria-pressed', 'true');
+        pill.innerHTML = `${tag}<span class="tag-remove" aria-label="Remove">×</span>`;
+        pill.dataset.group = group || '';
+        pill.addEventListener('click', () => {
+          selected.delete(tag);
+          syncHidden();
+          renderSelected();
+          renderMain();
+          renderSub(currentMain);
+        });
+        selectedWrap.appendChild(pill);
+      });
+    }
+
+    function syncHidden() {
+      genresInput.value = Array.from(selected.keys()).join(', ');
+      // basic validity: require at least 1 tag
+      if (genresInput.value.trim().length === 0) {
+        genresInput.setCustomValidity('Please select at least one genre');
+      } else {
+        genresInput.setCustomValidity('');
+      }
+    }
+
+    function addTag(tag, group) {
+      if (selected.has(tag)) return;
+      if (selected.size >= MAX_TAGS) {
+        // brief visual feedback
+        selectedWrap.classList.add('limit-shake');
+        setTimeout(() => selectedWrap.classList.remove('limit-shake'), 400);
+        return;
+      }
+      selected.set(tag, group || null);
+      syncHidden();
+      renderSelected();
+      renderMain();
+      renderSub(currentMain);
+    }
+
+    function makePill(text, isSelected, groupForSub) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'tag-pill' + (isSelected ? ' is-active' : '');
+      b.textContent = text;
+      b.dataset.group = groupForSub || '';
+      if (!isSelected) b.addEventListener('click', () => addTag(text, groupForSub));
+      return b;
+    }
+
+    function renderMain() {
+      mainList.innerHTML = '';
+      mainGenres.forEach((g) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        const isTagSelected = selected.has(g);
+        btn.className = 'tag-pill main-selector' + (g === currentMain ? ' is-current' : '') + (isTagSelected ? ' is-active' : '');
+        btn.textContent = g;
+        btn.dataset.group = g;
+        btn.addEventListener('click', () => {
+          currentMain = g;
+          renderMain();
+          renderSub(g);
+          // toggle main as tag on click
+          if (isTagSelected) {
+            selected.delete(g);
+          } else {
+            addTag(g, g);
+          }
+          syncHidden();
+          renderSelected();
+        });
+        mainList.appendChild(btn);
+      });
+    }
+
+    function renderSub(main) {
+      subList.innerHTML = '';
+      if (!main || !subGenres[main]) { subList.hidden = true; return; }
+      subList.hidden = false;
+      subGenres[main].forEach((sg) => {
+        const isSel = selected.has(sg);
+        subList.appendChild(makePill(sg, isSel, main));
+      });
+    }
+
+    let currentMain = mainGenres[0] || null;
+    // Initial render
+    renderMain();
+    renderSelected();
+    renderSub(currentMain);
+    syncHidden();
+  }
 });

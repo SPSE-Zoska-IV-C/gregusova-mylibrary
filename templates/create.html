@@ -28,8 +28,19 @@
       </div>
 
       <div class="form-group">
-        <label for="genre">Genre</label>
-        <textarea name="genre" id="genre" class="form-control" required>{{ request.form.get('genre', prefill_book.genre if prefill_book else '') }}</textarea>
+        <label for="genre-tags">Genres (up to 5)</label>
+        <div id="genre-picker" class="genre-picker">
+          <div class="genre-main-list" id="genre-main-list">
+            <!-- Main genres rendered by JS -->
+          </div>
+          <div class="genre-sub-list" id="genre-sub-list" hidden>
+            <!-- Subgenres rendered by JS when a main genre is clicked -->
+          </div>
+          <div class="genre-selected" id="genre-selected">
+            <!-- Selected tags appear here -->
+          </div>
+        </div>
+        <input type="hidden" name="genre" id="genre" required value="{{ request.form.get('genre', prefill_book.genre if prefill_book else '') }}">
       </div>
 
       <div class="form-group">
@@ -164,4 +175,11 @@
 </div>
 
 <script defer src="{{ url_for('static', filename='js/book_form.js') }}"></script>
+<script>
+  window.__MYLIBRARY__ = window.__MYLIBRARY__ || {};
+  window.__MYLIBRARY__.initialGenres = (document.getElementById('genre')?.value || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
+</script>
 {% endblock %}

@@ -63,30 +63,15 @@ h2 {
     margin-bottom: 20px;
 }
 
-label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 8px;
+.tag-pill {
+    background: var(--tag-base, #fbf8f4);
     color: #6b4c41;
+    margin-bottom: 8px;
     font-size: 0.95rem;
 }
 
-input[type="text"],
-input[type="number"],
-input[type="date"],
-textarea,
-select {
-    width: 100%;
-    padding: 12px;
-    background-color: #fbf8f4;
-    border: 1px solid rgba(107, 76, 65, 0.2);
-    border-radius: 12px;
-    font-size: 1rem;
-    box-sizing: border-box;
-    color: #46342c;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    font-family: inherit;
-}
+.tag-pill:hover { background: var(--tag-base-hover, #f2eae4); }
+.tag-pill.is-active { background: var(--tag-selected); color: #fff; border-color: var(--tag-selected); }
 
 input[type="text"]:focus,
 input[type="number"]:focus,
@@ -102,6 +87,49 @@ textarea {
     resize: vertical;
     min-height: 100px;
     line-height: 1.6;
+}
+
+/* Genre picker */
+.genre-picker { display: grid; gap: 0.75rem; }
+.genre-main-list, .genre-sub-list, .genre-selected {
+    display: flex; flex-wrap: wrap; gap: 8px;
+}
+.genre-sub-list { padding-top: 2px; }
+.tag-pill {
+    background: var(--tag-base, #fbf8f4);
+    color: #6b4c41;
+    border: 1px solid rgba(107,76,65,0.25);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+.main-selector { font-weight: 600; }
+.main-selector.is-current { outline: 2px solid rgba(163,107,98,0.35); }
+
+/* Signature colors per main genre (base + selected) */
+.tag-pill[data-group="Fiction"]                 { --tag-base:rgba(139,126,116,0.18); --tag-selected:#aa8b59; }
+.tag-pill[data-group="Non-fiction"]             { --tag-base:rgba(122,122,114,0.18); --tag-selected:#777774; }
+.tag-pill[data-group="Fantasy"]                 { --tag-base:rgba(47,93,80,0.18);  --tag-selected:#355643; }
+.tag-pill[data-group="Science Fiction"]         { --tag-base:rgba(74,108,111,0.18); --tag-selected:#46787c; }
+.tag-pill[data-group="Romance"]                 { --tag-base:rgba(176,122,122,0.18); --tag-selected:#9f6a7f; }
+.tag-pill[data-group="Mystery / Crime"]         { --tag-base:rgba(75,83,32,0.18);  --tag-selected:#74537d; }
+.tag-pill[data-group="Thriller / Suspense"]     { --tag-base:rgba(110,59,46,0.18); --tag-selected:#6c3633; }
+.tag-pill[data-group="Horror"]                  { --tag-base:rgba(59,47,47,0.18);  --tag-selected:#483131; }
+.tag-pill[data-group="Historical"]              { --tag-base:rgba(156,138,94,0.18); --tag-selected:#6d7653; }
+.tag-pill[data-group="Children’s / Young Adult"]{ --tag-base:rgba(201,124,93,0.18); --tag-selected:#bd765a; }
+.tag-pill:hover { background: var(--tag-base-hover, #f2eae4); }
+.tag-pill.is-active { background: var(--tag-selected); color: #fff; border-color: var(--tag-selected); }
+.tag-pill--main { font-weight: 600; }
+.genre-selected .tag-pill.selected {
+    background: var(--tag-selected); color: #fff; border-color: var(--tag-selected); position: relative;
+}
+.tag-remove { margin-left: 8px; font-weight: 700; }
+.limit-shake { animation: shake 0.3s linear; }
+@keyframes shake {
+  0%,100%{ transform: translateX(0); }
+  25%{ transform: translateX(-3px); }
+  75%{ transform: translateX(3px); }
 }
 
 /* Buttons */

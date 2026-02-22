@@ -101,5 +101,204 @@ Všetky JavaScriptové skripty sú umiestnené v samostatných súboroch
 v priečinku static/js a sú načítavané v HTML šablónach podľa potreby 
 konkrétnej stránky.
 
+4 Dizajn a vizuálny štýl aplikácie
+    Základný nápad a vizuál MyLibrary vznikali iteratívne priamo počas 
+vývoja. Cieľom je vytvoriť pokojné, čitateľné prostredie pre 
+milovníkov kníh, kde sa funkcionalita stretáva s jemnou estetikou. 
+Rozhranie je navrhnuté s dôrazom na prehľadnosť, zrozumiteľnosť 
+a konzistentné správanie komponentov.
+    Typografia vychádza zo systémových sans‑serif fontov (napr. Segoe UI, 
+Roboto), aby bola aplikácia prirodzene čitateľná na rôznych 
+platformách bez nutnosti sťahovať externé písma. Nadpisy sú 
+výraznejšie, s mierne negatívnym kerningom pre moderný vzhľad, 
+bežný text má príjemnú medzeru medzi riadkami a dostatočný kontrast.
+    Farebná paleta má „cozy bookworm" charakter s teplými odtieňmi. 
+Primárna textová farba je #6B4C41. Pozadie využíva jemný gradient 
+#E8DDD4 → #DCCFC6 → #D4C5BA, ktorý dodáva stránke hĺbku bez rušenia 
+obsahu. Karty a panely používajú svetlý podklad #FBF8F4. Akčné prvky 
+pracujú s akcentmi #A36B62 (primárny) a #B98174 (sekundárny); pre 
+upozornenia je určená farba #AF4D1F. Zaoblené rohy, jemné tiene 
+a decentné prechody pri hover/active stavoch podporujú príjemný pocit 
+z používania.
+    Tlačidlá sú zjednotené naprieč aplikáciou. Primárne tlačidlá majú 
+akcentné pozadie (#A36B62), svetlý text a „pill" tvar. Pri prejdení 
+myšou reagujú zvýraznením farby a tieňom; disabled stavy sú 
+zosvetlené a nepôsobia rušivo. Sekundárne tlačidlá („ghost") majú 
+priehľadný podklad s jemnou hranou, vhodné pre menej dominantné akcie 
+ako zatváranie panelu či doplnkové voľby.
+    Ikonografia je jednoduchá a konzistentná. V záhlaví sa nachádza 
+ikonka kníh, ktorá spolu s wordmarkom „My Library" tvorí vizuálnu 
+identitu aplikácie. Navigačné prvky využívajú drobné SVG ikony a sú 
+zladené s paletou, aby nepôsobili rušivo. Fixná spodná navigácia 
+na mobile zabezpečuje rýchly prístup k hlavným sekciám; na desktope 
+sa mení na kompaktný bočný panel, ktorý sa po „hover" rozšíri a 
+zobrazí textové popisky.
+    Profilové obrázky (avatary) sú vytvorené ako vlastná grafika pre 
+aplikáciu a postupne sa odomykajú za dosiahnuté „achievements". Medzi 
+míľniky patria najmä počty prečítaných kníh (napr. 5/10/15/20) a 
+počty prečítaných strán (napr. 500/2000/5000/7000). Používateľ si môže 
+z odomknutých možností vybrať preferovaný avatar a voliteľne nastaviť 
+jemnú farbu pozadia. Overenie odomknutia prebieha aj na strane servera, 
+aby sa predišlo obchádzaniu pravidiel a zachovala sa férovosť.
+    Každý avatar je navrhnutý ako jedinečný motív; sada je zámerne 
+rozmanitá, aby si každý používateľ našiel štýl, ktorý mu sedí. 
+Zároveň bola udržiavaná jednotná kresba a konzistentná paleta, aby 
+kolekcia pôsobila súrodým dojmom aj pri rôznych témach a veľkostiach 
+zobrazenia.
+    Rozloženia využívajú CSS grid a flex. Na malých obrazovkách sa 
+obsah láme do jedného stĺpca, zväčšujú sa interaktívne zóny a 
+klikateľné plochy, aby bola aplikácia pohodlná na dotyk. Na väčších 
+obrazovkách bočný sidebar uvoľňuje priestor pre hlavný obsah, ktorý 
+získava viac vzduchu a prehľadnosti; karty majú jednotnú mriežku 
+pre udržanie kompozície.
+    Špecifickým prvkom je výber žánrov pri pridávaní knihy. Namiesto 
+voľného textu sa používajú „tagy" so skupinami (Fiction, 
+Non‑fiction, Fantasy, Science Fiction, Romance, Mystery / Crime, 
+Thriller / Suspense, Horror, Historical, Children’s / Young Adult). 
+Podskupiny (subžánre) preberajú farbu svojej hlavnej skupiny cez 
+CSS premenné a data‑atribúty, čo zaručuje konzistentný vzhľad. 
+Používateľ môže vybrať maximálne päť tagov; vybrané sa serializujú 
+do skrytého poľa tak, aby boli čitateľné pre server.
+    Štatistiky čítania tvoria samostatnú vizuálnu jednotku s prepínačom 
+„By Day / By Month". Stĺpcové grafy nadväzujú na akcentnú paletu 
+a majú jasné popisky. Pod grafmi sú šípky na posun medzi mesiacmi 
+a rokmi. Prehľad sa na klik dynamicky aktualizuje cez endpoint 
+/stats_data, takže sa zmení len grafická časť a nie celá stránka; 
+tým sa znižuje latencia a zlepšuje plynulosť. Zvolený mesiac sa 
+pri načítaní predvolene nastaví na aktuálny.
+    Prístupnosť (a11y) je podporená zvýraznenými fokusovými stavmi, 
+jasným kontrastom textu a čitateľnými popiskami. Interaktívne prvky 
+majú dostatočnú veľkosť klikacej plochy. Texty sa neprekrývajú, 
+riadkovanie je konzistentné a komponenty majú zmysluplnú hierarchiu.
+    Vizuál je navrhnutý tak, aby pôsobil príjemne aj pri dlhšom 
+prezeraní knižnice, vytváral pocit poriadku a zároveň umožňoval 
+jednoduché rozšírenia do budúcna (napr. ďalšie grafy, zobrazenia 
+alebo motívy). Celková identita MyLibrary tak spája funkčnosť 
+s jemnou estetikou, vhodnou pre knižných nadšencov.
+
+5 Komponenty aplikácie
+    MyLibrary využíva súbor opakovaných komponentov, ktoré tvoria 
+kostru používateľského rozhrania. Základ vzniká v spoločnom 
+layout súbore a šablónach Jinja2, takže navigácia, pätička a ďalšie 
+prvky sa udržiavajú konzistentne naprieč podstránkami.
+
+5.1 Navigačný panel
+     Navigácia je navrhnutá tak, aby bola rýchla a nezahlcovala 
+ rozhranie. Na mobilných zariadeniach je panel prístupný dole ako 
+ fixný „bottom bar"; na desktopoch sa mení na kompaktný bočný sidebar, 
+ ktorý sa pri „hover" rozšíri a zobrazí textové popisky. Panel 
+ obsahuje odkazy na hlavné časti: Moja knižnica, Profil, Pridať knihu 
+ a Štatistiky. Vpravo (resp. v bočnom variante) sa zobrazuje pozdrav 
+ s menom používateľa a odkaz na odhlásenie; pre neprihlásených sa 
+ zobrazuje dvojica odkazov Prihlásenie/Registrácia.
+     Aktívna položka je zvýraznená akcentnou farbou a jemným podčiarknutím, 
+ aby používateľ vždy vedel, kde sa nachádza. Odkazy sú plne 
+ fokusovateľné cez klávesnicu, majú zreteľné focus stavy a ARIA 
+ popisky pre ikonické tlačidlá. Na položkách sa podľa potreby môžu 
+ zobrazovať malé „badges" (napr. počty neprečítaných záznamov), ktoré 
+ nepôsobia rušivo a pomáhajú orientácii.
+     V rámci zjednodušenia navigácie sa časť preklikov presunula priamo 
+ do profilu. „Wishlist" (chcem si prečítať) je preto integrovaný ako 
+ samostatná sekcia v profile, aby nebol hlavný panel preplnený. 
+ Z dôvodu kompatibility je zachovaný aj endpoint „want_to_read"; 
+ v praxi však presmeruje na profil do príslušnej záložky. Tento prístup 
+ zmenšuje počet položiek v menu a udržiava navigáciu prehľadnú. Aplikácia 
+ si pamätá poslednú navštívenú záložku profilu, aby sa používateľ po 
+ návrate rýchlejšie zorientoval.
+
+5.2 Pätička
+     Pätička je minimalistická a voliteľná. V základnom layoute je 
+ pripravená pre budúce rozšírenia (právne odkazy, sociálne siete, 
+ krátky opis aplikácie). Štýly v globálnom CSS definujú vzhľad 
+ priehľadného podkladu s jemným oddeľovacím okrajom, aby pätička 
+ nepôsobila rušivo a prirodzene ladila s vizuálnou témou.
+     Podľa potreby môže vykresľovať verziu aplikácie, dátum poslednej 
+ aktualizácie a odkaz na repozitár (GitHub), čo uľahčuje spätnú väzbu 
+ a sledovanie zmien. Na menších obrazovkách sa zobrazenie komprimuje 
+ do jedného riadku, aby sa zachovala čitateľnosť bez pretekania textu.
+
+5.3 Autentifikácia a používateľský účet
+     Komponent autentifikácie využíva Flask‑Login. Stav prihlásenia 
+ ovplyvňuje zobrazenie navigácie: neprihláseným sa ponúka 
+ Prihlásenie/Registrácia, prihláseným sa zobrazí pozdrav a odkaz na 
+ odhlásenie. Prihlasovací a registračný formulár sú realizované 
+ cez Flask‑WTF s CSRF ochranou, heslá sa ukladajú hashované cez 
+ Werkzeug. V profile si používateľ môže spravovať avatar, pozadie 
+ panelu a pristupovať k wishlistu.
+     Validácia prihlasovacích údajov prebieha serverovo aj na klientovi; 
+ chybové stavy sú zobrazené priamo pri poliach, aby boli rýchlo 
+ pochopiteľné. Po úspešnom prihlásení sa používateľ vracia na 
+ poslednú relevantnú stránku (napr. Štatistiky), čím sa znižuje počet 
+ zbytočných klikov. Odomykanie avatarov je viazané na dosiahnuté 
+ míľniky (kap. 4); výber avataru je dostupný len pre odomknuté 
+ možnosti, čím sa zachováva férovosť.
+
+5.4 Knižnica, wishlist a pridanie knihy
+     „Moja knižnica" zobrazuje knihy okrem wishlistu (ten je súčasť 
+ profilu). Zoznam podporuje filtrovanie podľa stavu a žánru, 
+ vyhľadávanie a rôzne druhy radenia. Karty kníh majú jednotný vzhľad, 
+ zobrazujú obálku, názov, autora, stav a prehľad značiek žánrov.
+ Fallback obálka sa použije v prípade, že titul nemá nahraný obrázok.
+     Komponent „Pridať knihu" obsahuje formulár s výberom obálky 
+ (návrhy alebo vlastné nahranie), stavom, dátumami a žánrovými 
+ „tagmi". Výber žánrov je riešený cez hlavné skupiny a subžánre, 
+ pričom farby preberajú z palety skupiny; maximálne je možné zvoliť 
+ päť tagov. Tagy sa serializujú do skrytého poľa v čitateľnom tvare, 
+ aby sa spracovali konzistentne na serveri. Úprava knihy preberá rovnaký 
+ formulár a umožňuje obálku nahradiť alebo odstrániť podľa potreby.
+     Nevhodné dátumy (napr. dátum ukončenia pred začiatkom) sú 
+ zvýraznené; používateľ dostane jasnú spätnú väzbu a návrh opravy. 
+ Mazanie knihy je chránené potvrdením, aby nedochádzalo k náhodným 
+ stratám dát.
+
+5.5 Komponent štatistík
+     Štatistiky ponúkajú zobrazenie „By Day / By Month". Pod grafmi sú 
+ šípky pre posun medzi mesiacmi a rokmi; aktualizácia prebieha 
+ dynamicky cez endpoint „/stats_data", takže sa obnoví len grafická 
+ časť a nie celá stránka. Zvolený mesiac sa predvolene nastaví na 
+ aktuálny. Vizualizácie nadväzujú na akcentnú paletu a zachovávajú 
+ prehľadné popisky.
+     Denné zobrazenie zvýrazňuje najlepší deň (najviac strán) jemným 
+ akcentom; nulové dni majú subtílnu základnú líniu, aby graf ostal 
+ prehľadný. Mesačné zobrazenie sumarizuje prehľad roka a pomáha 
+ sledovať trend. Pod grafmi sa zobrazujú doplnkové metriky, ako 
+ súčet strán za mesiac a priemer strán denne. JSON payload je 
+ optimalizovaný na rýchly prenos a obsahuje len hodnoty potrebné na 
+ prekreslenie komponentu.
+
+5.6 Formuláre a validácia
+     Formuláre v aplikácii sú jednotné a konzistentné. Serverová 
+ validácia beží cez Flask‑WTF; klientská vrstva dopĺňa okamžité 
+ upozornenia (napr. povinné polia, formát emailu). Chybové hlášky sú 
+ zobrazené priamo pri poli aj v súhrne nad formulárom. Tlačidlá majú 
+ jasné stavy (normal, hover, disabled) a sú dostatočne veľké na dotyk.
+
+5.7 Vyhľadávanie a filtrovanie
+     Vyhľadávanie v knižnici je dostupné priamo nad zoznamom; podporuje 
+ rýchle vyhľadanie podľa názvu alebo autora. Filtrovanie podľa stavu 
+ (napr. „čítam", „prečítané") a žánru pracuje cez prehľadné „chips" 
+ s možnosťou rýchleho zrušenia. Kombinácia filtrov je prehľadná a 
+ nezamyká používateľa do slepých uličiek.
+
+5.8 Nahrávanie obrázkov a správa súborov
+     Nahrávanie obálok je realizované bezpečne s kontrolou typu súboru 
+ a generovaním bezpečného názvu. Pred odoslaním sa zobrazuje náhľad, 
+ aby si používateľ overil voľbu. V prípade konfliktu názvu súboru sa 
+ uplatní unikátny príponový suffix, čím sa predíde kolíziám.
+
+5.9 Stavové hlášky a notifikácie
+     Aplikácia používa nenásilné stavové hlášky (flash messages) pre 
+ potvrdenia úspešných akcií aj chýb. Farby vychádzajú z palety: 
+ úspech je tlmená zelená, varovanie teplý oranžový akcent, chyba 
+ kontrastná červenohnedá. Hlášky sa objavia nad hlavným obsahom a 
+ po krátkom čase miznú, no sú prístupné aj cez čítačky obrazovky.
+
+5.10 Prístupnosť a klávesové skratky
+     Komponenty majú ARIA popisy a zmysluplnú hierarchiu nadpisov. 
+ Navigácia a prepínače grafov „By Day / By Month" sú ovládateľné 
+ klávesnicou; fokus nikdy „nezamrzne" mimo viditeľnej oblasti. 
+ Šípky na posun mesiacov/rokov majú popisky, aby boli pochopiteľné 
+ aj bez vizuálneho kontextu.
+
 Prakticka cast
 

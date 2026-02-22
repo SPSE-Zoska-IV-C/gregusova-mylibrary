@@ -257,6 +257,33 @@
     font-size: 0.85rem;
 }
 
+/* Simple navigation under charts */
+.chart-nav {
+    margin-top: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.nav-arrow {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--fg);
+    background: rgba(107, 76, 65, 0.1);
+    font-weight: 700;
+    line-height: 1;
+}
+
+.nav-arrow:hover {
+    background: rgba(107, 76, 65, 0.18);
+}
+
 /* Pie Chart Section */
 .pie-chart-section {
     background: var(--card);
@@ -324,12 +351,26 @@
     color: var(--fg);
     font-size: 0.95rem;
 }
+.legend-main { display: block; font-weight: 600; }
+.legend-sub { display: block; font-size: 0.85rem; color: var(--muted); margin-top: 2px; }
 
 .legend-value {
     color: var(--muted);
     font-size: 0.9rem;
     font-weight: 600;
 }
+
+/* Legend colors aligned with create page tag palette */
+.legend-item[data-group="Fiction"] .legend-color { background: #aa8b59; }
+.legend-item[data-group="Non-fiction"] .legend-color { background: #777774; }
+.legend-item[data-group="Fantasy"] .legend-color { background: #355643; }
+.legend-item[data-group="Science Fiction"] .legend-color { background: #46787c; }
+.legend-item[data-group="Romance"] .legend-color { background: #9f6a7f; }
+.legend-item[data-group="Mystery / Crime"] .legend-color { background: #74537d; }
+.legend-item[data-group="Thriller / Suspense"] .legend-color { background: #6c3633; }
+.legend-item[data-group="Horror"] .legend-color { background: #483131; }
+.legend-item[data-group="Historical"] .legend-color { background: #6d7653; }
+.legend-item[data-group="Children’s / Young Adult"] .legend-color { background: #bd765a; }
 
 /* Responsive Design */
 @media (max-width: 640px) {

@@ -81,11 +81,17 @@
 				</div>
 				{% endfor %}
 			</div>
-			{% if not stats.daily_logs_used %}
-			<p class="chart-note">No page logs yet for {{ stats.month_label }}.</p>
-			{% else %}
-			<p class="chart-note">{{ stats.month_label }} (from page logs)</p>
-			{% endif %}
+			<div class="chart-nav">
+				<a class="nav-arrow" href="{{ stats.month_prev_url }}" aria-label="Previous month">&#8249;</a>
+				<p class="chart-note">
+					{% if not stats.daily_logs_used %}
+						No page logs yet for {{ stats.month_label }}.
+					{% else %}
+						{{ stats.month_label }} (from page logs)
+					{% endif %}
+				</p>
+				<a class="nav-arrow" href="{{ stats.month_next_url }}" aria-label="Next month">&#8250;</a>
+			</div>
 		</div>
 
 		<div class="chart-container" id="monthlyChart" hidden>
@@ -100,11 +106,17 @@
 				</div>
 				{% endfor %}
 			</div>
-			{% if not stats.monthly_logs_used %}
-			<p class="chart-note">No page logs yet for {{ stats.chart_year }}.</p>
-			{% else %}
-			<p class="chart-note">{{ stats.chart_year }} (from page logs)</p>
-			{% endif %}
+			<div class="chart-nav">
+				<a class="nav-arrow" href="{{ stats.chart_year_prev_url }}" aria-label="Previous year">&#8249;</a>
+				<p class="chart-note">
+					{% if not stats.monthly_logs_used %}
+						No page logs yet for {{ stats.chart_year }}.
+					{% else %}
+						{{ stats.chart_year }} (from page logs)
+					{% endif %}
+				</p>
+				<a class="nav-arrow" href="{{ stats.chart_year_next_url }}" aria-label="Next year">&#8250;</a>
+			</div>
 		</div>
 	</section>
 
@@ -120,12 +132,18 @@
 				</text>
 			</svg>
 			<div class="pie-legend">
-				{% set colors = ['#a36b62', '#b98174', '#d4b5a8', '#e2c9bf', '#8e5a52', '#c9a88f', '#9d7a6b', '#b89a8a'] %}
 				{% for genre in stats.genre_data %}
-					{% set color = colors[loop.index0 % colors|length] %}
-					<div class="legend-item" data-genre="{{ genre.name }}" data-percentage="{{ genre.percentage }}" data-color="{{ color }}">
+					{% set parts = genre.name.split(',') %}
+					{% set main_genre = parts[0].strip() %}
+					{% set sub_genres = parts[1:]|list %}
+					<div class="legend-item" data-group="{{ main_genre }}" data-genre="{{ genre.name }}" data-percentage="{{ genre.percentage }}">
 						<span class="legend-color"></span>
-						<span class="legend-label">{{ genre.name }}</span>
+						<span class="legend-label">
+							<span class="legend-main">{{ main_genre }}</span>
+							{% if sub_genres %}
+								<span class="legend-sub">{{ sub_genres|join(', ') }}</span>
+							{% endif %}
+						</span>
 						<span class="legend-value">{{ genre.percentage }}%</span>
 					</div>
 				{% endfor %}
@@ -141,7 +159,19 @@
 			} catch (e) {
 				genreData = [];
 			}
-			const colors = ['#a36b62', '#b98174', '#d4b5a8', '#e2c9bf', '#8e5a52', '#c9a88f', '#9d7a6b', '#b89a8a'];
+			// Use the same palette as genre tags on the create page
+			const genreColors = {
+				'Fiction': '#aa8b59',
+				'Non-fiction': '#777774',
+				'Fantasy': '#355643',
+				'Science Fiction': '#46787c',
+				'Romance': '#9f6a7f',
+				'Mystery / Crime': '#74537d',
+				'Thriller / Suspense': '#6c3633',
+				'Horror': '#483131',
+				'Historical': '#6d7653',
+				'Children’s / Young Adult': '#bd765a'
+			};
 			const svg = document.getElementById('genrePieChart');
 			if (!svg || !genreData || genreData.length === 0) return;
 			
@@ -150,8 +180,11 @@
 			const radius = 80;
 			let currentAngle = -90; // Start at top
 			
-			genreData.forEach((genre, index) => {
+			genreData.forEach((genre) => {
 				const percentage = genre.percentage;
+				const parts = String(genre.name || '').split(',');
+				const main = parts.length ? parts[0].trim() : '';
+				const subs = parts.slice(1).map(s => s.trim()).filter(Boolean);
 				const angle = (percentage / 100) * 360;
 				const startAngle = currentAngle;
 				const endAngle = currentAngle + angle;
@@ -173,13 +206,14 @@
 				const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
 				const pathData = `M ${centerX} ${centerY} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`;
 				path.setAttribute('d', pathData);
-				path.setAttribute('fill', colors[index % colors.length]);
+				const fillColor = genreColors[main] || '#a36b62';
+				path.setAttribute('fill', fillColor);
 				path.setAttribute('class', 'pie-segment');
-				path.setAttribute('data-genre', genre.name);
+				path.setAttribute('data-genre', main);
 				path.setAttribute('data-percentage', percentage);
 				
 				const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
-				title.textContent = `${genre.name}: ${percentage}% (${genre.count} books)`;
+				title.textContent = `${main}${subs.length ? ' — ' + subs.join(', ') : ''}: ${percentage}% (${genre.count} books)`;
 				path.appendChild(title);
 				
 				// Insert before the center circle

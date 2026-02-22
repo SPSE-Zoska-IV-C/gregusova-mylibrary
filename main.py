@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from werkzeug.utils import secure_filename
 from models import db, Book, User, PageLog  # Import the single `db` instance and Book, User model
 from datetime import datetime, date, timedelta
@@ -8,7 +8,7 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 from werkzeug.security import generate_password_hash, check_password_hash
 from forms import SignupForm, LoginForm
 from sqlalchemy import text
-from collections import Counter
+from collections import Counter, defaultdict
 import re
 
 app = Flask(__name__)
@@ -17,7 +17,9 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key'
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///bookapp.db'  # Renamed to bookapp
+# Store DB beside the app to avoid cwd-dependent paths
+DB_PATH = os.path.join(app.root_path, 'bookapp.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{DB_PATH}"  # Renamed to bookapp
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Ensure the upload folder exists
@@ -732,10 +734,31 @@ def stats():
         return max(0, pages_read)
 
     today = datetime.utcnow().date()
-    chart_year = today.year
-    month_start = date(today.year, today.month, 1)
-    next_month_start = date(today.year + 1, 1, 1) if today.month == 12 else date(today.year, today.month + 1, 1)
-    prev_month_start = date(today.year - 1, 12, 1) if today.month == 1 else date(today.year, today.month - 1, 1)
+
+    # Optional navigation via query params
+    month_param = (request.args.get('month') or '').strip()  # format: YYYY-MM
+    year_param = (request.args.get('year') or '').strip()
+
+    # Resolve month reference for daily chart
+    month_start = None
+    if month_param:
+        try:
+            y_str, m_str = month_param.split('-', 1)
+            y, m = int(y_str), int(m_str)
+            month_start = date(y, m, 1)
+        except Exception:
+            month_start = None
+    if not month_start:
+        month_start = date(today.year, today.month, 1)
+
+    # Resolve year reference for monthly chart (defaults to month year)
+    try:
+        chart_year = int(year_param) if year_param else month_start.year
+    except Exception:
+        chart_year = month_start.year
+
+    next_month_start = date(month_start.year + 1, 1, 1) if month_start.month == 12 else date(month_start.year, month_start.month + 1, 1)
+    prev_month_start = date(month_start.year - 1, 12, 1) if month_start.month == 1 else date(month_start.year, month_start.month - 1, 1)
     prev_month_end = month_start - timedelta(days=1)
 
     books = Book.query.filter(
@@ -797,18 +820,36 @@ def stats():
         }
 
     author_counter = Counter((book.author or '').strip() for book in completed if (book.author or '').strip())
-    genre_counter = Counter((book.genre or '').strip() for book in completed if (book.genre or '').strip())
+    # Aggregate genres by MAIN tag (first item before comma)
+    main_counter: Counter = Counter()
+    main_subs_map: dict[str, Counter] = defaultdict(Counter)
+    for book in completed:
+        raw = (book.genre or '').strip()
+        if not raw:
+            continue
+        parts = [p.strip() for p in raw.split(',') if p.strip()]
+        if not parts:
+            continue
+        main_tag = parts[0]
+        sub_tags = parts[1:]
+        main_counter[main_tag] += 1
+        if sub_tags:
+            main_subs_map[main_tag].update(sub_tags)
 
     top_author = author_counter.most_common(1)[0] if author_counter else None
     
-    # Genre data for pie chart
+    # Genre data for pie chart (grouped by MAIN genre)
     genre_data = []
-    total_genre_books = sum(genre_counter.values())
-    if total_genre_books > 0:
-        for genre_name, count in genre_counter.most_common():
-            percentage = round((count / total_genre_books) * 100, 1)
+    total_main_books = sum(main_counter.values())
+    if total_main_books > 0:
+        for main_name, count in main_counter.most_common():
+            subs_counter = main_subs_map.get(main_name, Counter())
+            # Show top 3 subgenres under the main genre
+            sub_list = [sub for sub, _ in subs_counter.most_common(3)]
+            display_name = main_name + (', ' + ', '.join(sub_list) if sub_list else '')
+            percentage = round((count / total_main_books) * 100, 1)
             genre_data.append({
-                'name': genre_name,
+                'name': display_name,
                 'count': count,
                 'percentage': percentage
             })
@@ -858,7 +899,7 @@ def stats():
             'is_max': (max_month_pages > 0 and pages_value == max_month_pages),
         })
 
-    pages_read_this_month = monthly_pages[today.month - 1] if today.year == chart_year else 0
+    pages_read_this_month = monthly_pages[month_start.month - 1] if chart_year == month_start.year else 0
 
     # Daily pages read for current month based on logs.
     days_in_month = (next_month_start - month_start).days
@@ -887,6 +928,12 @@ def stats():
             'pct': pct,
         })
 
+    # Navigation helpers
+    prev_month_str = f"{prev_month_start.year:04d}-{prev_month_start.month:02d}"
+    next_month_str = f"{next_month_start.year:04d}-{next_month_start.month:02d}"
+    chart_year_prev = chart_year - 1
+    chart_year_next = chart_year + 1
+
     stats_payload = {
         'total_books': total_books,
         'reading_now': len(reading_now),
@@ -902,7 +949,7 @@ def stats():
         'top_author': top_author,
         'genre_data': genre_data,
         'top_genre_month': top_genre_month,
-        'month_label': today.strftime('%B %Y'),
+        'month_label': month_start.strftime('%B %Y'),
         'prev_month_label': prev_month_start.strftime('%B %Y'),
         'chart_year': chart_year,
         'monthly': monthly_series,
@@ -912,9 +959,117 @@ def stats():
         'daily_logs_used': bool(daily_logs_used),
         'daily_max_pages': int(round(max_daily_pages)),
         'days_in_month': days_in_month,
+        # nav urls
+        'month_prev_url': url_for('stats', month=prev_month_str, year=chart_year),
+        'month_next_url': url_for('stats', month=next_month_str, year=chart_year),
+        'chart_year_prev_url': url_for('stats', year=chart_year_prev, month=f"{month_start.year:04d}-{month_start.month:02d}"),
+        'chart_year_next_url': url_for('stats', year=chart_year_next, month=f"{month_start.year:04d}-{month_start.month:02d}"),
     }
 
     return render_template('stats.html', stats=stats_payload)
+
+
+@app.route('/stats_data')
+@login_required
+def stats_data():
+    """Lightweight JSON for updating charts (month/day + year) without full reload."""
+    today = datetime.utcnow().date()
+
+    # Query params
+    month_param = (request.args.get('month') or '').strip()  # YYYY-MM
+    year_param = (request.args.get('year') or '').strip()
+
+    # Resolve month
+    month_start = None
+    if month_param:
+        try:
+            y_str, m_str = month_param.split('-', 1)
+            y, m = int(y_str), int(m_str)
+            month_start = date(y, m, 1)
+        except Exception:
+            month_start = None
+    if not month_start:
+        month_start = date(today.year, today.month, 1)
+
+    # Resolve chart year
+    try:
+        chart_year = int(year_param) if year_param else month_start.year
+    except Exception:
+        chart_year = month_start.year
+
+    # Month boundaries
+    next_month_start = date(month_start.year + 1, 1, 1) if month_start.month == 12 else date(month_start.year, month_start.month + 1, 1)
+    prev_month_start = date(month_start.year - 1, 12, 1) if month_start.month == 1 else date(month_start.year, month_start.month - 1, 1)
+
+    # Monthly pages for the year (from logs)
+    monthly_pages = [0] * 12
+    logs_this_year = PageLog.query.filter(
+        PageLog.user_id == current_user.id,
+        PageLog.log_date >= date(chart_year, 1, 1),
+        PageLog.log_date < date(chart_year + 1, 1, 1)
+    ).all()
+    for log in logs_this_year:
+        if log.log_date:
+            monthly_pages[log.log_date.month - 1] += int(log.pages or 0)
+
+    max_month_pages = max(monthly_pages) if any(monthly_pages) else 0
+    month_labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    monthly_series = []
+    for i in range(12):
+        pages_value = int(monthly_pages[i])
+        pct = int(round((pages_value / max_month_pages) * 100)) if max_month_pages else 0
+        monthly_series.append({
+            'label': month_labels[i],
+            'pages': pages_value,
+            'pct': pct,
+            'is_max': (max_month_pages > 0 and pages_value == max_month_pages),
+        })
+
+    # Daily pages for current selected month
+    days_in_month = (next_month_start - month_start).days
+    daily_pages = {day: 0.0 for day in range(1, days_in_month + 1)}
+    logs_this_month = PageLog.query.filter(
+        PageLog.user_id == current_user.id,
+        PageLog.log_date >= month_start,
+        PageLog.log_date < next_month_start
+    ).all()
+    for log in logs_this_month:
+        if log.log_date and month_start <= log.log_date < next_month_start:
+            daily_pages[log.log_date.day] += float(log.pages or 0)
+
+    max_daily_pages = max(daily_pages.values()) if any(daily_pages.values()) else 0.0
+    daily_series = []
+    for day in range(1, days_in_month + 1):
+        pages_float = float(daily_pages.get(day, 0.0))
+        pages_value = int(round(pages_float))
+        pct = int(round((pages_float / max_daily_pages) * 100)) if max_daily_pages else 0
+        daily_series.append({
+            'day': day,
+            'pages': pages_value,
+            'pct': pct,
+        })
+
+    # Navigation urls (page links; JS will translate to data endpoint for ajax)
+    prev_month_str = f"{prev_month_start.year:04d}-{prev_month_start.month:02d}"
+    next_month_str = f"{next_month_start.year:04d}-{next_month_start.month:02d}"
+    chart_year_prev = chart_year - 1
+    chart_year_next = chart_year + 1
+
+    payload = {
+        'month_label': month_start.strftime('%B %Y'),
+        'chart_year': chart_year,
+        'daily': daily_series,
+        'daily_logs_used': bool(any(v > 0 for v in daily_pages.values())),
+        'days_in_month': days_in_month,
+        'monthly': monthly_series,
+        'monthly_logs_used': bool(any(monthly_pages)),
+        'month_prev_url': url_for('stats', month=prev_month_str, year=chart_year),
+        'month_next_url': url_for('stats', month=next_month_str, year=chart_year),
+        'chart_year_prev_url': url_for('stats', year=chart_year_prev, month=f"{month_start.year:04d}-{month_start.month:02d}"),
+        'chart_year_next_url': url_for('stats', year=chart_year_next, month=f"{month_start.year:04d}-{month_start.month:02d}"),
+    }
+
+    return jsonify(payload)
 
 
 # Auth routes
@@ -998,6 +1153,16 @@ with app.app_context():
         app.logger.warning('Could not ensure profile_picture column: %s', exc)
 
     ensure_profile_bg_color_column()
+
+    # Auto-seed when the database is empty
+    try:
+        from seed_data import main as seed_main
+
+        has_users = db.session.query(User.id).first() is not None
+        if not has_users:
+            seed_main()
+    except Exception as exc:
+        app.logger.warning('Auto-seed skipped: %s', exc)
 
 if __name__ == '__main__':
     app.run(debug=True)
