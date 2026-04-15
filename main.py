@@ -10,6 +10,7 @@ from forms import SignupForm, LoginForm
 from sqlalchemy import text
 from collections import Counter, defaultdict
 import re
+import math
 
 app = Flask(__name__)
 
@@ -320,13 +321,13 @@ def update_progress(book_id):
     book = Book.query.get_or_404(book_id)
     if book.user_id != current_user.id:
         flash('Not authorized to update this book', 'error')
-        return redirect(url_for('mylist'))
+        return redirect(url_for('profile'))
 
     old_pages_read = int(book.pages_read or 0)
 
     if (book.status or '').lower() != 'reading now':
         flash('Progress can only be updated for books that are Reading Now.', 'error')
-        return redirect(url_for('mylist'))
+        return redirect(url_for('profile'))
 
     pages_read_raw = request.form.get('pages_read', book.pages_read)
     notes = request.form.get('notes', '')
@@ -338,7 +339,7 @@ def update_progress(book_id):
         pages_read = int(pages_read_raw)
     except (TypeError, ValueError):
         flash('Please provide a valid number of pages read.', 'error')
-        return redirect(url_for('mylist'))
+        return redirect(url_for('profile'))
 
     pages_read = max(0, min(pages_read, book.pages or pages_read))
     finish_date = None
@@ -347,7 +348,7 @@ def update_progress(book_id):
             finish_date = datetime.strptime(finish_date_str, '%Y-%m-%d').date()
         except ValueError:
             flash('Finish date must be in YYYY-MM-DD format.', 'error')
-            return redirect(url_for('mylist'))
+            return redirect(url_for('profile'))
 
     book.notes = notes.strip() if notes is not None else book.notes
 
@@ -388,7 +389,7 @@ def update_progress(book_id):
         db.session.rollback()
         flash(f'Could not update progress: {exc}', 'error')
 
-    return redirect(url_for('mylist'))
+    return redirect(url_for('profile'))
 
 @app.route('/edit/<int:book_id>', methods=['GET', 'POST'])
 @login_required
@@ -438,7 +439,7 @@ def delete_book(book_id):
     book = Book.query.get_or_404(book_id)
     if book.user_id != current_user.id:
         flash('Not authorized to delete this book', 'error')
-        return redirect(url_for('mylist'))
+        return redirect(url_for('profile'))
     
     was_wishlist = (book.status or '').lower() == 'want to read'
     
@@ -452,7 +453,7 @@ def delete_book(book_id):
     # Redirect back to the appropriate page
     if was_wishlist:
         return redirect(url_for('profile', tab='wishlist'))
-    return redirect(url_for('mylist'))
+    return redirect(url_for('profile'))
 
 @app.route('/book/<int:book_id>/change_status', methods=['POST'])
 @login_required
@@ -460,12 +461,12 @@ def change_status(book_id):
     book = Book.query.get_or_404(book_id)
     if book.user_id != current_user.id:
         flash('Not authorized to modify this book', 'error')
-        return redirect(url_for('mylist'))
+        return redirect(url_for('profile'))
     
     new_status = request.form.get('new_status')
     if new_status not in ['Reading Now', 'Want to Read', 'Already Read', 'Finished']:
         flash('Invalid status', 'error')
-        return redirect(url_for('mylist'))
+        return redirect(url_for('profile'))
     
     old_status = book.status
     book.status = new_status
@@ -479,7 +480,7 @@ def change_status(book_id):
     # Redirect to appropriate page
     if (old_status or '').lower() == 'want to read' or new_status.lower() == 'want to read':
         return redirect(url_for('profile', tab='wishlist'))
-    return redirect(url_for('mylist'))
+    return redirect(url_for('profile'))
 
 @app.route('/reading')
 @login_required
@@ -518,6 +519,22 @@ def want_to_read():
 
         pages = max(0, pages)
 
+        if cover == '__custom__':
+            uploaded = request.files.get('custom_cover')
+            if not uploaded or not uploaded.filename:
+                flash('Please upload a cover image.', 'error')
+                return redirect(url_for('profile', tab='wishlist'))
+            if not allowed_file(uploaded.filename):
+                flash('Invalid file type. Please upload a PNG, JPG, JPEG, or GIF.', 'error')
+                return redirect(url_for('profile', tab='wishlist'))
+
+            original_name = secure_filename(uploaded.filename)
+            ext = os.path.splitext(original_name)[1].lower()
+            unique_name = f"cover_{current_user.id}_{uuid4().hex}{ext}"
+            save_path = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'], unique_name)
+            uploaded.save(save_path)
+            cover = f"uploads/{unique_name}"
+
         new_book = Book(
             user_id=current_user.id,
             title=title,
@@ -549,76 +566,6 @@ def finished():
 
 
 @app.route('/', endpoint='index')
-@app.route('/mylist')
-@login_required
-def mylist():
-    status_filter = request.args.get('status', 'all').strip()
-    genre_filter = request.args.get('genre', 'all').strip()
-    sort_option = request.args.get('sort', 'title').strip()
-    search_query = request.args.get('q', '').strip()
-
-    # Exclude "Want to Read" books from My Library - they belong in the wishlist
-    query = Book.query.filter(
-        Book.user_id == current_user.id,
-        Book.status != 'Want to Read'
-    )
-
-    # Filter by status
-    if status_filter and status_filter.lower() != 'all':
-        query = query.filter(Book.status.ilike(status_filter))
-
-    # Filter by genre
-    if genre_filter and genre_filter.lower() != 'all':
-        query = query.filter(Book.genre.ilike(genre_filter))
-
-    # Search by title or author
-    if search_query:
-        like = f"%{search_query}%"
-        query = query.filter((Book.title.ilike(like)) | (Book.author.ilike(like)))
-
-    # Sorting
-    if sort_option == 'rating':
-        query = query.order_by(Book.rating.desc().nullslast(), Book.title.collate('NOCASE').asc())
-    elif sort_option == 'rating_asc':
-        query = query.order_by(Book.rating.asc().nullslast(), Book.title.collate('NOCASE').asc())
-    elif sort_option == 'start_date':
-        query = query.order_by(Book.start_date.desc().nullslast(), Book.title.collate('NOCASE').asc())
-    elif sort_option == 'start_date_asc':
-        query = query.order_by(Book.start_date.asc().nullslast(), Book.title.collate('NOCASE').asc())
-    elif sort_option == 'author':
-        query = query.order_by(Book.author.collate('NOCASE').asc(), Book.title.collate('NOCASE').asc())
-    elif sort_option == 'author_desc':
-        query = query.order_by(Book.author.collate('NOCASE').desc(), Book.title.collate('NOCASE').asc())
-    elif sort_option == 'title_desc':
-        query = query.order_by(Book.title.collate('NOCASE').desc())
-    else:  # default: title
-        query = query.order_by(Book.title.collate('NOCASE').asc())
-
-    books = query.all()
-
-    # Get unique genres for filter dropdown (exclude Want to Read books)
-    all_genres = db.session.query(Book.genre).filter(
-        Book.user_id == current_user.id,
-        Book.genre.isnot(None),
-        Book.genre != '',
-        Book.status != 'Want to Read'
-    ).distinct().order_by(Book.genre.asc()).all()
-    genres = [g[0] for g in all_genres if g[0]]
-
-    has_filters = bool(search_query or status_filter.lower() != 'all' or genre_filter.lower() != 'all' or sort_option != 'title')
-    filter_meta = {
-        'status': status_filter,
-        'genre': genre_filter,
-        'sort': sort_option,
-        'q': search_query,
-        'statuses': ['all', 'Reading Now', 'Want to Read', 'Already Read', 'Finished'],
-        'genres': genres,
-        'dirty': has_filters
-    }
-
-    return render_template('mylist.html', books=books, filters=filter_meta)
-
-
 @app.route('/profile')
 @login_required
 def profile():
@@ -663,11 +610,13 @@ def profile():
 
     pfp_options = get_avatar_pfp_options(total_books_read, total_pages_read)
     milestones = get_avatar_unlock_milestones(total_books_read, total_pages_read)
+    cover_designs = get_cover_designs()
     
     return render_template('profile.html', 
                          reading_now=reading_now,
                          already_read=already_read,
                          wishlist_books=wishlist_books,
+                         cover_designs=cover_designs,
                          pfp_options=pfp_options,
                          avatar_milestones=milestones,
                          user=current_user,
@@ -770,10 +719,9 @@ def stats():
     reading_now = [book for book in books if (book.status or '').lower() == 'reading now']
     completed = [book for book in books if is_completed(book.status)]
 
-    pages_read_total = sum(effective_pages_read(book) for book in books)
+    book_pages_total = sum(effective_pages_read(book) for book in books)
     logged_pages_total = db.session.query(db.func.sum(PageLog.pages)).filter(PageLog.user_id == current_user.id).scalar() or 0
-    if logged_pages_total:
-        pages_read_total = int(logged_pages_total)
+    pages_read_total = int(logged_pages_total) if logged_pages_total else book_pages_total
 
     ratings = [book.rating for book in completed if book.rating is not None]
     avg_rating = round(sum(ratings) / len(ratings), 2) if ratings else None
@@ -806,6 +754,12 @@ def stats():
         book for book in completed
         if book.finish_date is not None and month_start <= book.finish_date < next_month_start
     ]
+    
+    # Books started this month
+    month_started = [
+        book for book in books
+        if book.start_date is not None and month_start <= book.start_date < next_month_start
+    ]
     month_best_rated = [book for book in month_finished if book.rating is not None]
     best_book_month = None
     if month_best_rated:
@@ -820,9 +774,34 @@ def stats():
         }
 
     author_counter = Counter((book.author or '').strip() for book in completed if (book.author or '').strip())
-    # Aggregate genres by MAIN tag (first item before comma)
+    
+    # Mapping of subgenres to their main genres
+    subgenre_to_main = {
+        # Fiction
+        'Literary fiction': 'Fiction', 'Contemporary fiction': 'Fiction', 'Short stories': 'Fiction', 'Drama': 'Fiction', 'Adventure': 'Fiction',
+        # Non-fiction
+        'Biography / Memoir': 'Non-fiction', 'Self-help': 'Non-fiction', 'History': 'Non-fiction', 'Science': 'Non-fiction', 'Essays': 'Non-fiction',
+        # Fantasy
+        'High fantasy': 'Fantasy', 'Urban fantasy': 'Fantasy', 'Dark fantasy': 'Fantasy', 'Epic fantasy': 'Fantasy', 'Mythological fantasy': 'Fantasy',
+        # Science Fiction
+        'Dystopian': 'Science Fiction', 'Space opera': 'Science Fiction', 'Cyberpunk': 'Science Fiction', 'Time travel': 'Science Fiction', 'Hard science fiction': 'Science Fiction',
+        # Romance
+        'Contemporary romance': 'Romance', 'Historical romance': 'Romance', 'Romantic comedy': 'Romance', 'Paranormal romance': 'Romance', 'Young adult romance': 'Romance',
+        # Mystery / Crime
+        'Detective fiction': 'Mystery / Crime', 'Cozy mystery': 'Mystery / Crime', 'Police procedural': 'Mystery / Crime', 'True crime': 'Mystery / Crime', 'Noir': 'Mystery / Crime',
+        # Thriller / Suspense
+        'Psychological thriller': 'Thriller / Suspense', 'Political thriller': 'Thriller / Suspense', 'Legal thriller': 'Thriller / Suspense', 'Spy thriller': 'Thriller / Suspense', 'Action thriller': 'Thriller / Suspense',
+        # Horror
+        'Psychological horror': 'Horror', 'Supernatural horror': 'Horror', 'Gothic horror': 'Horror', 'Monster horror': 'Horror', 'Cosmic horror': 'Horror',
+        # Historical
+        'Historical fiction': 'Historical', 'Alternate history': 'Historical', 'War fiction': 'Historical', 'Biographical fiction': 'Historical',
+        # Children's / Young Adult
+        'Picture books': "Children's / Young Adult", 'Middle grade': "Children's / Young Adult", 'Young adult fiction': "Children's / Young Adult", 'Educational': "Children's / Young Adult", 'Coming-of-age': "Children's / Young Adult",
+    }
+    main_genres_set = {'Fiction', 'Non-fiction', 'Fantasy', 'Science Fiction', 'Romance', 'Mystery / Crime', 'Thriller / Suspense', 'Horror', 'Historical', "Children's / Young Adult"}
+    
+    # Aggregate genres by MAIN genre - count ALL genres per book
     main_counter: Counter = Counter()
-    main_subs_map: dict[str, Counter] = defaultdict(Counter)
     for book in completed:
         raw = (book.genre or '').strip()
         if not raw:
@@ -830,11 +809,17 @@ def stats():
         parts = [p.strip() for p in raw.split(',') if p.strip()]
         if not parts:
             continue
-        main_tag = parts[0]
-        sub_tags = parts[1:]
-        main_counter[main_tag] += 1
-        if sub_tags:
-            main_subs_map[main_tag].update(sub_tags)
+        # Count ALL main genres from the book's tags
+        counted_mains = set()
+        for tag in parts:
+            main_tag = None
+            if tag in main_genres_set:
+                main_tag = tag
+            elif tag in subgenre_to_main:
+                main_tag = subgenre_to_main[tag]
+            if main_tag and main_tag not in counted_mains:
+                main_counter[main_tag] += 1
+                counted_mains.add(main_tag)
 
     top_author = author_counter.most_common(1)[0] if author_counter else None
     
@@ -843,13 +828,10 @@ def stats():
     total_main_books = sum(main_counter.values())
     if total_main_books > 0:
         for main_name, count in main_counter.most_common():
-            subs_counter = main_subs_map.get(main_name, Counter())
-            # Show top 3 subgenres under the main genre
-            sub_list = [sub for sub, _ in subs_counter.most_common(3)]
-            display_name = main_name + (', ' + ', '.join(sub_list) if sub_list else '')
             percentage = round((count / total_main_books) * 100, 1)
             genre_data.append({
-                'name': display_name,
+                'name': main_name,
+                'main': main_name,
                 'count': count,
                 'percentage': percentage
             })
@@ -900,9 +882,36 @@ def stats():
         })
 
     pages_read_this_month = monthly_pages[month_start.month - 1] if chart_year == month_start.year else 0
+    
+    # Get pages from previous month using logs
+    logs_prev_month = PageLog.query.filter(
+        PageLog.user_id == current_user.id,
+        PageLog.log_date >= prev_month_start,
+        PageLog.log_date < month_start
+    ).all()
+    pages_prev_month_logged = sum(int(log.pages or 0) for log in logs_prev_month)
+    
+    # Calculate days in each month
+    days_in_month = (next_month_start - month_start).days
+    days_in_prev_month = (month_start - prev_month_start).days
+    
+    # For current month, use days elapsed (up to today); for past months use full month
+    if month_start.year == today.year and month_start.month == today.month:
+        days_elapsed_this_month = today.day
+    else:
+        days_elapsed_this_month = days_in_month
+    
+    # Calculate average per day (round up)
+    avg_per_day_this = math.ceil(pages_read_this_month / days_elapsed_this_month) if days_elapsed_this_month > 0 else 0
+    avg_per_day_prev = math.ceil(pages_prev_month_logged / days_in_prev_month) if days_in_prev_month > 0 else 0
+    
+    # Calculate percentage change per day
+    if avg_per_day_prev > 0:
+        pct_change_per_day = round(((avg_per_day_this - avg_per_day_prev) / avg_per_day_prev) * 100)
+    else:
+        pct_change_per_day = 100 if avg_per_day_this > 0 else 0
 
     # Daily pages read for current month based on logs.
-    days_in_month = (next_month_start - month_start).days
     daily_pages: dict[int, float] = {day: 0.0 for day in range(1, days_in_month + 1)}
 
     logs_this_month = PageLog.query.filter(
@@ -940,9 +949,14 @@ def stats():
         'completed_total': len(completed),
         'completed_this_year': len(completed_this_year),
         'pages_read_total': pages_read_total,
+        'book_pages_total': book_pages_total,
         'pages_read_this_month': pages_read_this_month,
-        'pages_prev_month': pages_prev_month,
-        'pages_delta': pages_read_this_month - pages_prev_month,
+        'pages_prev_month': pages_prev_month_logged,
+        'avg_per_day_this': avg_per_day_this,
+        'avg_per_day_prev': avg_per_day_prev,
+        'pct_change_per_day': pct_change_per_day,
+        'started_this_month': len(month_started),
+        'finished_this_month': len(month_finished),
         'avg_rating': avg_rating,
         'last_best_rated_book': last_best_rated_book,
         'best_book_month': best_book_month,

@@ -6,6 +6,7 @@
     <title>MyLibrary</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     {% block head %}{% endblock %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/book_card.css') }}">
 </head>
 <body>
 
@@ -19,8 +20,7 @@
 <div class="top-menu">
 
     <nav>
-      <a href="{{ url_for('index') }}" title="My Library"><span class="label">My Library</span></a>
-            <a href="{{ url_for('profile') }}" title="My Profile"><span class="label">My Profile</span></a>
+    <a href="{{ url_for('index') }}" title="My Library"><span class="label">My Library</span></a>
             <a href="{{ url_for('create') }}" title="Add Book"><span class="label">Add Book</span></a>
             <a href="{{ url_for('stats') }}" title="Statistics"><span class="label">Statistics</span></a>
             <span style="flex:1"></span>

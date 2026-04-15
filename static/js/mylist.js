@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   const panel = document.getElementById('bookPanel');
   const cards = document.querySelectorAll('.book-card[data-book]');
+  const wishlistCards = document.querySelectorAll('.wishlist-item[data-book]:not(.wishlist-item-add)');
   const bookGrid = document.querySelector('.book-grid');
   const searchInput = document.getElementById('bookSearch');
   const searchFeedback = document.getElementById('searchFeedback');
@@ -193,6 +194,17 @@ document.addEventListener('DOMContentLoaded', () => {
   if (panel) {
     cards.forEach((card) => {
       card.addEventListener('click', () => {
+        const data = getBookData(card);
+        openPanel(data);
+      });
+    });
+
+    wishlistCards.forEach((card) => {
+      card.addEventListener('click', (e) => {
+        // Don't open panel if clicking delete button or add to library link
+        if (e.target.closest('.wishlist-delete-form') || e.target.closest('.wishlist-add-library-btn')) {
+          return;
+        }
         const data = getBookData(card);
         openPanel(data);
       });

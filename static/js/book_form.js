@@ -216,8 +216,15 @@ document.addEventListener('DOMContentLoaded', () => {
     mainGenres.forEach((g) => tagToGroup.set(g, g));
     Object.entries(subGenres).forEach(([g, subs]) => subs.forEach((t) => tagToGroup.set(t, g)));
 
+    const initialGenres = (window.__MYLIBRARY__?.initialGenres && window.__MYLIBRARY__.initialGenres.length)
+      ? window.__MYLIBRARY__.initialGenres
+      : (genresInput.value || '')
+          .split(',')
+          .map((t) => t.trim())
+          .filter(Boolean);
+
     const selected = new Map(); // tag -> group
-    (window.__MYLIBRARY__?.initialGenres || []).forEach((t) => {
+    initialGenres.forEach((t) => {
       const grp = tagToGroup.get(t) || null;
       selected.set(t, grp);
     });
@@ -292,17 +299,15 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.textContent = g;
         btn.dataset.group = g;
         btn.addEventListener('click', () => {
-          currentMain = g;
-          renderMain();
-          renderSub(g);
-          // toggle main as tag on click
-          if (isTagSelected) {
-            selected.delete(g);
+          // Just open/toggle the rollout - don't select the main genre
+          if (currentMain === g) {
+            // Clicking same main genre closes the rollout
+            currentMain = null;
           } else {
-            addTag(g, g);
+            currentMain = g;
           }
-          syncHidden();
-          renderSelected();
+          renderMain();
+          renderSub(currentMain);
         });
         mainList.appendChild(btn);
       });
@@ -312,13 +317,19 @@ document.addEventListener('DOMContentLoaded', () => {
       subList.innerHTML = '';
       if (!main || !subGenres[main]) { subList.hidden = true; return; }
       subList.hidden = false;
+      // Add the main genre as first option in the subgenres list
+      const isMainSel = selected.has(main);
+      const mainPill = makePill(main, isMainSel, main);
+      mainPill.classList.add('sub-main-option');
+      subList.appendChild(mainPill);
+      // Then add all subgenres
       subGenres[main].forEach((sg) => {
         const isSel = selected.has(sg);
         subList.appendChild(makePill(sg, isSel, main));
       });
     }
 
-    let currentMain = mainGenres[0] || null;
+    let currentMain = null; // Start with no rollout open
     // Initial render
     renderMain();
     renderSelected();

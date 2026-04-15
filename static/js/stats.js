@@ -1,11 +1,82 @@
 (function(){
+  const AXIS_TICKS = 7;
+  const SCALE_BASE = 60;    // Default max scale
+  const SCALE_STEP = 30;    // Increment when data exceeds current max
+
+  function buildScale(maxValue) {
+    const safeMax = Number.isFinite(maxValue) && maxValue > 0 ? maxValue : 0;
+    
+    // Find the appropriate scale max: 60, 90, 120, 150, etc.
+    let scaleMax = SCALE_BASE;
+    while (safeMax > scaleMax) {
+      scaleMax += SCALE_STEP;
+    }
+    
+    const step = scaleMax / (AXIS_TICKS - 1);
+    return { step, max: scaleMax };
+  }
+
+  function getPagesFromChart(chartEl) {
+    if (!chartEl) return [];
+    return Array.from(chartEl.querySelectorAll('.bar-item'))
+      .map((el) => {
+        // Try data-pages attribute first (daily chart), then .bar-pages text (monthly chart)
+        const dataPages = el.dataset.pages;
+        if (dataPages !== undefined) return Number(dataPages);
+        const pagesEl = el.querySelector('.bar-pages');
+        return Number(pagesEl?.textContent || 0);
+      })
+      .map((value) => (Number.isFinite(value) && value >= 0 ? value : 0));
+  }
+
+  function renderAxis(axisEl, maxValue) {
+    if (!axisEl) return;
+    const scale = buildScale(maxValue);
+    axisEl.innerHTML = '';
+    for (let i = 0; i < AXIS_TICKS; i += 1) {
+      const val = Math.round(scale.step * i);
+      const tick = document.createElement('span');
+      tick.textContent = String(val);
+      axisEl.appendChild(tick);
+    }
+  }
+
+  function updateChartFrame(container) {
+    if (!container) return;
+    const frame = container.querySelector('.chart-frame');
+    const chart = container.querySelector('.chart');
+    const axis = container.querySelector('.chart-yaxis');
+    if (!frame || !chart || !axis) return;
+
+    const pages = getPagesFromChart(chart);
+    const maxValue = pages.length ? Math.max(...pages) : 0;
+    const scale = buildScale(maxValue);
+    
+    renderAxis(axis, maxValue);
+    
+    // Recalculate bar heights based on fixed scale
+    const bars = chart.querySelectorAll('.bar[data-pct]');
+    const barItems = chart.querySelectorAll('.bar-item');
+    barItems.forEach((item, i) => {
+      const bar = item.querySelector('.bar');
+      if (!bar) return;
+      const pageVal = pages[i] || 0;
+      const pct = scale.max > 0 ? (pageVal / scale.max) * 100 : 0;
+      bar.style.height = `${Math.max(0, Math.min(100, pct))}%`;
+    });
+  }
+
+  function applyBarHeights(root = document) {
+    const bars = root.querySelectorAll('.bar[data-pct]');
+    bars.forEach((bar) => {
+      const pct = Number(bar.getAttribute('data-pct') || 0);
+      const safePct = Number.isFinite(pct) ? Math.max(0, Math.min(100, pct)) : 0;
+      bar.style.height = `${safePct}%`;
+    });
+  }
+
   // Apply bar heights from data attributes (prevents template inline-style parse errors)
-  const bars = document.querySelectorAll('.bar[data-pct]');
-  bars.forEach((bar) => {
-    const pct = Number(bar.getAttribute('data-pct') || 0);
-    const safePct = Number.isFinite(pct) ? Math.max(0, Math.min(100, pct)) : 0;
-    bar.style.height = `${safePct}%`;
-  });
+  applyBarHeights(document);
 
   // Apply legend swatch colors from data-color
   const legendItems = document.querySelectorAll('.legend-item[data-color]');
@@ -43,7 +114,74 @@
 
     // Set initial view (default to daily)
     switchView('daily');
+    updateChartFrame(dailyChart);
+    updateChartFrame(monthlyChart);
   }
+
+  // Daily chart bar click tooltip
+  const chartTooltip = document.getElementById('chartTooltip');
+  const tooltipPages = chartTooltip?.querySelector('.tooltip-pages');
+  const tooltipDate = chartTooltip?.querySelector('.tooltip-date');
+  let selectedBar = null;
+
+  function showTooltip(barItem) {
+    if (!chartTooltip || !tooltipPages || !tooltipDate) return;
+    
+    const pages = barItem.dataset.pages || '0';
+    const day = barItem.dataset.day || '';
+    const monthLabel = barItem.dataset.date || '';
+    
+    // Parse month label to get month name and year
+    const parts = monthLabel.split(' ');
+    const monthName = parts[0] || '';
+    const year = parts[1] || '';
+    
+    tooltipPages.textContent = `${pages} pages`;
+    tooltipDate.textContent = `${day} ${monthName} ${year}`;
+    
+    // Position tooltip above the bar
+    const barRect = barItem.getBoundingClientRect();
+    const frameEl = barItem.closest('.chart-frame');
+    const frameRect = frameEl.getBoundingClientRect();
+    
+    const left = barRect.left + barRect.width / 2 - frameRect.left;
+    const top = barRect.top - frameRect.top;
+    
+    chartTooltip.style.left = `${left}px`;
+    chartTooltip.style.top = `${top}px`;
+    chartTooltip.hidden = false;
+    
+    // Mark bar as selected
+    if (selectedBar) selectedBar.classList.remove('is-selected');
+    barItem.classList.add('is-selected');
+    selectedBar = barItem;
+  }
+
+  function hideTooltip() {
+    if (chartTooltip) chartTooltip.hidden = true;
+    if (selectedBar) {
+      selectedBar.classList.remove('is-selected');
+      selectedBar = null;
+    }
+  }
+
+  // Event delegation for daily chart bars
+  document.addEventListener('click', (e) => {
+    const barItem = e.target.closest('.chart-daily .bar-item');
+    if (barItem) {
+      e.stopPropagation();
+      if (selectedBar === barItem) {
+        hideTooltip();
+      } else {
+        showTooltip(barItem);
+      }
+      return;
+    }
+    // Click outside hides tooltip
+    if (!e.target.closest('.chart-tooltip')) {
+      hideTooltip();
+    }
+  });
 
   // Partial navigation for charts (AJAX update of just the chart containers)
   function toDataUrl(pageUrl) {
@@ -56,21 +194,21 @@
     }
   }
 
-  function updateBars(container, series, kind) {
+  function updateBars(container, series, kind, monthLabel) {
     // kind: 'daily' or 'monthly'
     const chart = container.querySelector(kind === 'daily' ? '.chart-daily' : '.chart-monthly');
     if (!chart) return;
     chart.innerHTML = '';
+    const ordinalLabels = {1: '1st', 7: '7th', 14: '14th', 21: '21st', 28: '28th'};
     if (kind === 'daily') {
       series.forEach(item => {
         const wrap = document.createElement('div');
         wrap.className = 'bar-item';
-        wrap.title = `Day ${item.day}: ${item.pages} pages`;
-        wrap.innerHTML = `
-          <div class="bar-wrap"><div class="bar" data-pct="${item.pct}"></div></div>
-          <div class="bar-label">${item.day}</div>
-          <div class="bar-pages">${item.pages}</div>
-        `;
+        wrap.dataset.day = item.day;
+        wrap.dataset.pages = item.pages;
+        wrap.dataset.date = monthLabel || '';
+        const labelText = ordinalLabels[item.day] || '';
+        wrap.innerHTML = `<div class="bar-wrap"><div class="bar" data-pct="${item.pct}"></div></div>${labelText ? `<span class="day-label">${labelText}</span>` : ''}`;
         chart.appendChild(wrap);
       });
     } else {
@@ -87,11 +225,7 @@
       });
     }
     // Re-apply heights
-    chart.querySelectorAll('.bar[data-pct]').forEach((bar) => {
-      const pct = Number(bar.getAttribute('data-pct') || 0);
-      const safePct = Number.isFinite(pct) ? Math.max(0, Math.min(100, pct)) : 0;
-      bar.style.height = `${safePct}%`;
-    });
+    applyBarHeights(chart);
   }
 
   function updateNav(container, data, scope) {
@@ -127,12 +261,13 @@
       if (!res.ok) return;
       const data = await res.json();
       if (isDaily) {
-        updateBars(container, data.daily, 'daily');
+        updateBars(container, data.daily, 'daily', data.month_label);
         updateNav(container, data, 'daily');
       } else {
-        updateBars(container, data.monthly, 'monthly');
+        updateBars(container, data.monthly, 'monthly', null);
         updateNav(container, data, 'monthly');
       }
+      updateChartFrame(container);
 
       // Update the browser address to the non-API URL for shareability
       try {

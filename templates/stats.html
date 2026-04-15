@@ -32,7 +32,7 @@
 				<h3>Pages Read</h3>
 			</div>
 			<div class="card-body">
-				<p class="big-number">{{ stats.pages_read_total }}</p>
+				<p class="big-number">{{ stats.book_pages_total }}</p>
 				<p class="subtext">total pages</p>
 			</div>
 		</article>
@@ -46,19 +46,27 @@
 				<p class="subtext">books finished</p>
 			</div>
 		</article>
-
-		{% if stats.avg_rating %}
-		<article class="stat-card">
-			<div class="card-head">
-				<h3>Average Rating</h3>
-			</div>
-			<div class="card-body">
-				<p class="big-number">{{ stats.avg_rating }}</p>
-				<p class="subtext">out of 5 stars</p>
-			</div>
-		</article>
-		{% endif %}
 	</div>
+
+	<!-- Pages Logged This Month Section -->
+	<section class="monthly-section">
+		<h3>Pages Logged This Month</h3>
+		<div class="monthly-stats">
+			<p class="big-number">{{ stats.pages_read_this_month }}</p>
+			<p class="subtext">~{{ stats.avg_per_day_this }} pages/day</p>
+			<p class="comparison {% if stats.pct_change_per_day >= 0 %}positive{% else %}negative{% endif %}">
+				That's {{ stats.pct_change_per_day|abs }}% {% if stats.pct_change_per_day >= 0 %}more{% else %}less{% endif %} per day than last month
+			</p>
+		</div>
+	</section>
+
+	<!-- Monthly Activity Section -->
+	<section class="monthly-section activity-section">
+		<h3>This Month's Activity</h3>
+		<p class="activity-text">
+			You started <strong>{{ stats.started_this_month }}</strong> new book{{ 's' if stats.started_this_month != 1 else '' }} and finished <strong>{{ stats.finished_this_month }}</strong> this month.
+		</p>
+	</section>
 
 	<!-- Reading Progress Graph -->
 	<section class="graph-section">
@@ -70,16 +78,33 @@
 			</div>
 		</div>
 		<div class="chart-container" id="dailyChart">
-			<div class="chart chart-daily" aria-label="Pages read by day">
-				{% for item in stats.daily %}
-				<div class="bar-item" title="Day {{ item.day }}: {{ item.pages }} pages">
-					<div class="bar-wrap">
-						<div class="bar" data-pct="{{ item.pct }}"></div>
-					</div>
-					<div class="bar-label">{{ item.day }}</div>
-					<div class="bar-pages">{{ item.pages }}</div>
+			<div class="chart-frame" data-kind="daily">
+				<div class="chart-guides" aria-hidden="true">
+					<span class="guide-line"></span>
+					<span class="guide-line"></span>
+					<span class="guide-line"></span>
+					<span class="guide-line"></span>
+					<span class="guide-line"></span>
+					<span class="guide-line"></span>
+					<span class="guide-line"></span>
 				</div>
-				{% endfor %}
+				<div class="chart chart-daily" aria-label="Pages read by day">
+					{% for item in stats.daily %}
+					<div class="bar-item" data-day="{{ item.day }}" data-pages="{{ item.pages }}" data-date="{{ stats.month_label }}">
+						<div class="bar-wrap">
+							<div class="bar" data-pct="{{ item.pct }}"></div>
+						</div>
+						{% if item.day in [1, 7, 14, 21, 28] %}
+						<span class="day-label">{% if item.day == 1 %}1st{% elif item.day == 7 %}7th{% elif item.day == 14 %}14th{% elif item.day == 21 %}21st{% else %}28th{% endif %}</span>
+						{% endif %}
+					</div>
+					{% endfor %}
+				</div>
+				<div class="chart-tooltip" id="chartTooltip" hidden>
+					<span class="tooltip-pages"></span>
+					<span class="tooltip-date"></span>
+				</div>
+				<div class="chart-yaxis" aria-hidden="true"></div>
 			</div>
 			<div class="chart-nav">
 				<a class="nav-arrow" href="{{ stats.month_prev_url }}" aria-label="Previous month">&#8249;</a>
@@ -95,16 +120,28 @@
 		</div>
 
 		<div class="chart-container" id="monthlyChart" hidden>
-			<div class="chart chart-monthly" aria-label="Pages read by month">
-				{% for item in stats.monthly %}
-				<div class="bar-item" title="{{ item.label }}: {{ item.pages }} pages">
-					<div class="bar-wrap">
-						<div class="bar" data-pct="{{ item.pct }}"></div>
-					</div>
-					<div class="bar-label">{{ item.label }}</div>
-					<div class="bar-pages">{{ item.pages }}</div>
+			<div class="chart-frame" data-kind="monthly">
+				<div class="chart-guides" aria-hidden="true">
+					<span class="guide-line"></span>
+					<span class="guide-line"></span>
+					<span class="guide-line"></span>
+					<span class="guide-line"></span>
+					<span class="guide-line"></span>
+					<span class="guide-line"></span>
+					<span class="guide-line"></span>
 				</div>
-				{% endfor %}
+				<div class="chart chart-monthly" aria-label="Pages read by month">
+					{% for item in stats.monthly %}
+					<div class="bar-item" title="{{ item.label }}: {{ item.pages }} pages">
+						<div class="bar-wrap">
+							<div class="bar" data-pct="{{ item.pct }}"></div>
+						</div>
+						<div class="bar-label">{{ item.label }}</div>
+						<div class="bar-pages">{{ item.pages }}</div>
+					</div>
+					{% endfor %}
+				</div>
+				<div class="chart-yaxis" aria-hidden="true"></div>
 			</div>
 			<div class="chart-nav">
 				<a class="nav-arrow" href="{{ stats.chart_year_prev_url }}" aria-label="Previous year">&#8249;</a>
@@ -133,7 +170,7 @@
 			</svg>
 			<div class="pie-legend">
 				{% for genre in stats.genre_data %}
-					<div class="legend-item" data-group="{{ genre.name }}" data-genre="{{ genre.name }}" data-percentage="{{ genre.percentage }}">
+					<div class="legend-item" data-group="{{ genre.main }}" data-genre="{{ genre.name }}" data-percentage="{{ genre.percentage }}">
 						<span class="legend-color"></span>
 						<span class="legend-label">
 							<span class="legend-main">{{ genre.name }}</span>
@@ -176,9 +213,7 @@
 			
 			genreData.forEach((genre) => {
 				const percentage = genre.percentage;
-				const parts = String(genre.name || '').split(',');
-				const main = parts.length ? parts[0].trim() : '';
-				const subs = parts.slice(1).map(s => s.trim()).filter(Boolean);
+				const main = genre.main || '';
 				const angle = (percentage / 100) * 360;
 				const startAngle = currentAngle;
 				const endAngle = currentAngle + angle;
@@ -207,7 +242,7 @@
 				path.setAttribute('data-percentage', percentage);
 				
 				const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
-				title.textContent = `${main}${subs.length ? ' — ' + subs.join(', ') : ''}: ${percentage}% (${genre.count} books)`;
+				title.textContent = `${genre.name}: ${percentage}% (${genre.count} books)`;
 				path.appendChild(title);
 				
 				// Insert before the center circle
@@ -222,30 +257,6 @@
 
 	<!-- Additional Stats -->
 	<div class="stats-grid secondary">
-		{% if stats.best_book_month %}
-		<article class="stat-card">
-			<div class="card-head">
-				<h3>Best This Month</h3>
-			</div>
-			<div class="card-body">
-				<p class="book-title">{{ stats.best_book_month.title }}</p>
-				<p class="book-author">by {{ stats.best_book_month.author }}</p>
-				<p class="book-rating">Rating: <strong>{{ stats.best_book_month.rating }}/5</strong></p>
-			</div>
-		</article>
-		{% endif %}
-
-		{% if stats.top_author %}
-		<article class="stat-card">
-			<div class="card-head">
-				<h3>Top Author</h3>
-			</div>
-			<div class="card-body">
-				<p class="book-title">{{ stats.top_author[0] }}</p>
-				<p class="subtext">{{ stats.top_author[1] }} {{ 'book' if stats.top_author[1] == 1 else 'books' }}</p>
-			</div>
-		</article>
-		{% endif %}
 	</div>
 </section>
 {% endblock %}

@@ -132,6 +132,9 @@ textarea {
   75%{ transform: translateX(3px); }
 }
 
+/* Main genre option in subgenres list */
+.sub-main-option { font-weight: 600; }
+
 /* Buttons */
 button {
     background-color: #a36b62;

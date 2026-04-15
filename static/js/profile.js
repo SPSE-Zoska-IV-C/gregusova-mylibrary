@@ -51,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Wishlist form toggle (embedded in Profile)
   const toggleBtn = document.getElementById('toggleWishForm');
+  const toggleBtnCard = document.getElementById('toggleWishFormCard');
   const cancelBtn = document.getElementById('cancelWishForm');
   const cancelBtn2 = document.getElementById('cancelWishForm2');
   const formWrapper = document.getElementById('wishFormWrapper');
@@ -78,6 +79,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  if (toggleBtnCard) {
+    toggleBtnCard.addEventListener('click', openWishForm);
+  }
+
   if (emptyCta) {
     emptyCta.addEventListener('click', openWishForm);
   }
@@ -85,6 +90,116 @@ document.addEventListener('DOMContentLoaded', () => {
   [cancelBtn, cancelBtn2].forEach((btn) => {
     if (btn) btn.addEventListener('click', closeWishForm);
   });
+
+  const wishlistCards = Array.from(document.querySelectorAll('.wishlist-item[data-book]'));
+  const wishlistSearchInput = document.getElementById('wishlistSearchInput');
+  const wishlistFeedback = document.getElementById('wishlistSearchFeedback');
+  const wishlistFilterToggle = document.getElementById('wishlistFilterToggle');
+  const wishlistFilterPanel = document.getElementById('wishlistFilterPanel');
+  const wishlistGenreFilter = document.getElementById('wishlistGenreFilter');
+  const wishlistNotesFilter = document.getElementById('wishlistNotesFilter');
+  const wishlistApplyFilters = document.getElementById('wishlistApplyFilters');
+  const wishlistResetFilters = document.getElementById('wishlistResetFilters');
+
+  const getWishlistBookData = (card) => {
+    if (!card) return {};
+    if (!card._wishlistData) {
+      try {
+        card._wishlistData = card.dataset.book ? JSON.parse(card.dataset.book) : {};
+      } catch (error) {
+        card._wishlistData = {};
+      }
+    }
+    return card._wishlistData;
+  };
+
+  const applyWishlistFilters = () => {
+    if (!wishlistCards.length) return;
+
+    const query = (wishlistSearchInput?.value || '').trim().toLowerCase();
+    const selectedGenre = (wishlistGenreFilter?.value || '').trim().toLowerCase();
+    const notesMode = wishlistNotesFilter?.value || 'all';
+    let visibleCount = 0;
+
+    wishlistCards.forEach((card) => {
+      const data = getWishlistBookData(card);
+      const title = (data.title || '').toLowerCase();
+      const author = (data.author || '').toLowerCase();
+      const genre = (data.genre || '').toLowerCase();
+      const notes = (data.notes || '').trim();
+
+      const matchesQuery = !query || `${title} ${author}`.includes(query);
+      const matchesGenre = !selectedGenre || genre === selectedGenre;
+      const matchesNotes = notesMode === 'all' || (notesMode === 'with' ? Boolean(notes) : !notes);
+      const isVisible = matchesQuery && matchesGenre && matchesNotes;
+
+      card.hidden = !isVisible;
+      if (isVisible) {
+        visibleCount += 1;
+      }
+    });
+
+    if (wishlistFeedback) {
+      wishlistFeedback.hidden = visibleCount !== 0;
+    }
+  };
+
+  if (wishlistGenreFilter && wishlistCards.length) {
+    const genres = Array.from(new Set(
+      wishlistCards
+        .map((card) => (getWishlistBookData(card).genre || '').trim())
+        .filter(Boolean)
+        .sort((left, right) => left.localeCompare(right))
+    ));
+
+    genres.forEach((genre) => {
+      const option = document.createElement('option');
+      option.value = genre;
+      option.textContent = genre;
+      wishlistGenreFilter.appendChild(option);
+    });
+  }
+
+  if (wishlistFilterToggle && wishlistFilterPanel) {
+    wishlistFilterPanel.setAttribute('hidden', '');
+    wishlistFilterToggle.setAttribute('aria-expanded', 'false');
+
+    wishlistFilterToggle.addEventListener('click', () => {
+      const isHidden = wishlistFilterPanel.hasAttribute('hidden');
+      if (isHidden) {
+        wishlistFilterPanel.removeAttribute('hidden');
+        wishlistFilterToggle.setAttribute('aria-expanded', 'true');
+      } else {
+        wishlistFilterPanel.setAttribute('hidden', '');
+        wishlistFilterToggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  if (wishlistSearchInput) {
+    wishlistSearchInput.addEventListener('input', applyWishlistFilters);
+  }
+
+  if (wishlistApplyFilters) {
+    wishlistApplyFilters.addEventListener('click', applyWishlistFilters);
+  }
+
+  if (wishlistGenreFilter) {
+    wishlistGenreFilter.addEventListener('change', applyWishlistFilters);
+  }
+
+  if (wishlistNotesFilter) {
+    wishlistNotesFilter.addEventListener('change', applyWishlistFilters);
+  }
+
+  if (wishlistResetFilters) {
+    wishlistResetFilters.addEventListener('click', () => {
+      if (wishlistSearchInput) wishlistSearchInput.value = '';
+      if (wishlistGenreFilter) wishlistGenreFilter.value = '';
+      if (wishlistNotesFilter) wishlistNotesFilter.value = 'all';
+      applyWishlistFilters();
+    });
+  }
 
   // Avatar editor panel
   const avatarTile = document.getElementById('avatarTile');

@@ -11,9 +11,9 @@
 /* Profile Header - Instagram Style */
 .profile-header {
     display: flex;
-    align-items: flex-start;
-    gap: 3rem;
-    padding: 2.5rem 0;
+    align-items: center;
+    gap: 3.5rem;
+    padding: 2.25rem 0;
     border-bottom: 1px solid rgba(107, 76, 65, 0.15);
     margin-bottom: 0;
 }
@@ -24,28 +24,28 @@
 }
 
 .avatar-tile {
-    width: 140px;
-    height: 140px;
+    width: 152px;
+    height: 152px;
     border-radius: 40px;
     background: #e2c9bf;
     display: grid;
     place-items: center;
     color: #6b4c41;
-    border: 3px solid rgba(107, 76, 65, 0.1);
-    box-shadow: 0 4px 16px rgba(107, 76, 65, 0.12);
+    border: 4px solid rgba(107, 76, 65, 0.14);
+    box-shadow: 0 8px 22px rgba(107, 76, 65, 0.16);
     overflow: hidden;
 }
 
 .avatar-tile img {
-    width: 92%;
-    height: 92%;
+    width: 88%;
+    height: 88%;
     object-fit: contain;
 }
 
 .avatar-edit-btn {
     position: absolute;
-    right: -6px;
-    bottom: 6px;
+    right: 2px;
+    bottom: 4px;
     width: 40px;
     height: 40px;
     border-radius: 999px;
@@ -288,7 +288,8 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    align-items: flex-start;
+    gap: 1rem;
 }
 
 .profile-info-header {
@@ -299,37 +300,37 @@
 
 .profile-info-header h1 {
     margin: 0;
-    font-size: clamp(1.8rem, 3vw, 2.5rem);
+    font-size: clamp(1.75rem, 3vw, 2.2rem);
     color: #6b4c41;
-    font-weight: 300;
+    font-weight: 500;
     letter-spacing: -0.02em;
 }
 
 /* Instagram-style stats */
 .profile-stats {
     display: flex;
-    gap: 2.5rem;
+    gap: 2rem;
     padding: 0;
 }
 
 .stat-item {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.25rem;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 0.4rem;
 }
 
 .stat-number {
-    font-size: 1.75rem;
+    font-size: 1.4rem;
     font-weight: 700;
     color: #6b4c41;
     line-height: 1;
 }
 
 .stat-label {
-    font-size: 0.9rem;
-    color: rgba(107, 76, 65, 0.7);
-    font-weight: 400;
+    font-size: 0.98rem;
+    color: rgba(107, 76, 65, 0.85);
+    font-weight: 500;
     text-transform: none;
     letter-spacing: 0;
 }
@@ -337,7 +338,7 @@
 .profile-meta {
     margin: 0;
     color: rgba(107, 76, 65, 0.8);
-    font-size: 0.95rem;
+    font-size: 0.98rem;
 }
 
 /* PFP Customizer */
@@ -672,19 +673,63 @@
 /* Responsive Design */
 @media (max-width: 768px) {
     .profile-header {
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: minmax(112px, 128px) 1fr;
         align-items: center;
-        text-align: center;
-        gap: 2rem;
+        text-align: left;
+        gap: 1rem 1.15rem;
     }
 
     .profile-info-section {
-        align-items: center;
+        align-items: flex-start;
+        gap: 0.65rem;
+        min-width: 0;
     }
 
     .profile-stats {
-        justify-content: center;
-        gap: 2rem;
+        order: 1;
+        justify-content: flex-start;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .profile-avatar {
+        justify-self: center;
+    }
+
+    .avatar-tile {
+        width: 112px;
+        height: 112px;
+        border-radius: 32px;
+    }
+
+    .avatar-edit-btn {
+        width: 34px;
+        height: 34px;
+        right: -4px;
+        bottom: 4px;
+    }
+
+    .profile-info-header {
+        order: 0;
+        width: auto;
+        justify-content: flex-start;
+    }
+
+    .profile-info-header h1 {
+        font-size: clamp(1.4rem, 5vw, 1.85rem);
+    }
+
+    .profile-meta {
+        order: 3;
+        grid-column: 1 / -1;
+        width: 100%;
+        text-align: center;
+        margin-top: 0.25rem;
+    }
+
+    .profile-stats .stat-item {
+        align-items: flex-start;
     }
 
     .tab-btn {

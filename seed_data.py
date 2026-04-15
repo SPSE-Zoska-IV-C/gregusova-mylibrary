@@ -163,15 +163,14 @@ def seed_logs_for_year(user: User, books: list[Book], rng: Random, year: int) ->
         # Skip months in the future
         if year == today.year and month > today.month:
             continue
-        days = [2, 10, 20]
-        if month % 2 == 0:
-            days = [3, 12, 24]
-        base_pages = 40 + month * 10
+        day_count = rng.randint(5, 10)
+        days = rng.sample(list(range(1, 29)), k=day_count)
+        base_pages = rng.randint(0, 94)
         for d in days:
             log_day = date(year, month, min(d, 28))
             if log_day > today:
                 continue
-            pages_val = base_pages + rng.randint(0, 25)
+            pages_val = min(160, base_pages + rng.randint(0, 25))
             b = books[rng.randint(0, len(books) - 1)] if books else None
             entry = PageLog(
                 user_id=user.id,
@@ -214,11 +213,8 @@ def main():
         cleared_years = set(y for y, _ in ym_list)
         for y in cleared_years:
             clear_logs_for_year(user.id, y)
-        # Seed logs for each month
-        for y, m in ym_list:
-            # Only seed up to current month in current year
-            if y == today.year and m > today.month:
-                continue
+        # Seed logs once per year (avoids duplicate daily entries)
+        for y in sorted(cleared_years):
             seed_logs_for_year(user, books, rng, y)
 
         print(f"Seed complete: user={user.email}, books={len(books)}; logs for last {months} months created.")

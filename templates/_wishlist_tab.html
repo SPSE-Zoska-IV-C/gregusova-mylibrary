@@ -1,0 +1,213 @@
+{# Wishlist Tab Content - included from profile.html #}
+<section class="wishlist-wrapper wishlist-wrapper--embedded">
+    <div class="add-book-form" id="wishFormWrapper" hidden>
+        <div class="form-container">
+            <div class="form-header">
+                <h2>Add a Book to Your Wishlist</h2>
+                <button type="button" class="form-close" id="cancelWishForm">&times;</button>
+            </div>
+            <form method="POST" action="{{ url_for('want_to_read') }}" class="wish-form" enctype="multipart/form-data">
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="wish_title">Title <span class="required">*</span></label>
+                        <input type="text" id="wish_title" name="title" class="form-input" required value="{{ request.form.get('title', '') }}" placeholder="Enter book title">
+                    </div>
+                    <div class="form-field">
+                        <label for="wish_author">Author <span class="required">*</span></label>
+                        <input type="text" id="wish_author" name="author" class="form-input" required value="{{ request.form.get('author', '') }}" placeholder="Enter author name">
+                    </div>
+                    <div class="form-field full-width">
+                        <label for="genre">Genres (up to 5)</label>
+                        <div id="genre-picker" class="genre-picker">
+                            <div class="genre-main-list" id="genre-main-list"></div>
+                            <div class="genre-sub-list" id="genre-sub-list" hidden></div>
+                            <div class="genre-selected" id="genre-selected"></div>
+                        </div>
+                        <input type="hidden" name="genre" id="genre" required value="{{ request.form.get('genre', '') }}">
+                    </div>
+                    <div class="form-field">
+                        <label for="wish_pages">Pages</label>
+                        <input type="number" id="wish_pages" name="pages" class="form-input" min="0" value="{{ request.form.get('pages', '') }}" placeholder="Estimated pages">
+                    </div>
+                    {% set selected_cover = request.form.get('cover', '') %}
+                    <div class="form-field full-width">
+                        <label for="custom-cover-file">Choose a Cover Design</label>
+                        <div class="cover-picker">
+                            {% if cover_designs %}
+                            <div class="cover-design-grid">
+                                {% set ns = namespace(rendered_first_variant=false) %}
+                                {% for design in cover_designs %}
+                                <div class="cover-design-card" data-design="{{ design.id }}">
+                                    <div class="cover-design-wrapper">
+                                        <div class="cover-display">
+                                            <img src="{{ url_for('static', filename=design.preview) }}" alt="{{ design.name }}" class="cover-preview-main" data-design="{{ design.id }}">
+                                            <span class="cover-name">{{ design.name }}</span>
+                                        </div>
+                                        <div class="color-dots-container">
+                                            {% for variant in design.variants %}
+                                            {% set is_selected = selected_cover and selected_cover == variant.file %}
+                                            <label class="color-dot-wrapper" title="Color {{ variant.label }}">
+                                                <input type="radio"
+                                                       name="cover"
+                                                       value="{{ variant.file }}"
+                                                       data-preview-src="{{ url_for('static', filename=variant.file) }}"
+                                                       data-design="{{ design.id }}"
+                                                       {% if is_selected %}
+                                                         checked
+                                                       {% elif not selected_cover and not ns.rendered_first_variant and loop.first %}
+                                                         checked
+                                                       {% endif %}
+                                                       {% if not ns.rendered_first_variant and loop.first %}required{% endif %}>
+                                                <div class="color-dot{% if is_selected or (not selected_cover and not ns.rendered_first_variant and loop.first) %} selected{% endif %}"
+                                                     data-swatch="{{ variant.label }}"
+                                                     data-preview-src="{{ url_for('static', filename=variant.file) }}">
+                                                </div>
+                                            </label>
+                                            {% if not selected_cover and not ns.rendered_first_variant and loop.first %}
+                                              {% set ns.rendered_first_variant = true %}
+                                            {% endif %}
+                                            {% if is_selected %}
+                                              {% set ns.rendered_first_variant = true %}
+                                            {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+
+                                {% set custom_selected = selected_cover == '__custom__' %}
+                                <div class="cover-design-card cover-design-card--custom{% if custom_selected %} is-selected{% endif %}" data-design="custom">
+                                    <div class="cover-design-wrapper">
+                                        <div class="cover-display">
+                                            <label class="cover-custom-area" for="custom-cover-file">
+                                                <input
+                                                  type="radio"
+                                                  name="cover"
+                                                  value="__custom__"
+                                                  id="custom-cover-radio"
+                                                  class="cover-custom-radio"
+                                                  {% if custom_selected %}checked{% endif %}>
+
+                                                <input
+                                                  type="file"
+                                                  name="custom_cover"
+                                                  id="custom-cover-file"
+                                                  class="cover-custom-file"
+                                                  accept="image/*">
+
+                                                <div class="cover-custom-ui" aria-hidden="true">
+                                                    <div class="cover-custom-plus">+</div>
+                                                    <div class="cover-custom-text">Add cover</div>
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <p class="cover-empty-state">No cover designs available right now.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="form-field full-width">
+                        <label for="wish_link">Retailer Link</label>
+                        <input type="url" id="wish_link" name="retailer_link" class="form-input" value="{{ request.form.get('retailer_link', '') }}" placeholder="https://example.com/book">
+                    </div>
+                    <div class="form-field full-width">
+                        <label for="wish_notes">Notes</label>
+                        <textarea id="wish_notes" name="notes" class="form-textarea" rows="3" placeholder="Why do you want to read this? Any reminders?">{{ request.form.get('notes', '') }}</textarea>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Add to Wishlist</button>
+                    <button type="button" class="btn-secondary" id="cancelWishForm2">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <form class="wishlist-search" role="search" onsubmit="return false;">
+        <p class="wishlist-search-label">Search wishlist books</p>
+        <label class="sr-only" for="wishlistSearchInput">Search wishlist books</label>
+        <div class="search-controls">
+            <div class="search-field">
+                <img src="{{ url_for('static', filename='img/icons/search.svg') }}" alt="" aria-hidden="true">
+                <input type="search" id="wishlistSearchInput" placeholder="Search by title or author" autocomplete="off">
+            </div>
+            <button type="button" class="filter-toggle" id="wishlistFilterToggle" aria-expanded="false" aria-controls="wishlistFilterPanel">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                </svg>
+                <span>Filters</span>
+            </button>
+        </div>
+        <div class="filter-panel" id="wishlistFilterPanel" hidden>
+            <div class="filter-section">
+                <label for="wishlistGenreFilter">Genre</label>
+                <select id="wishlistGenreFilter" class="filter-select">
+                    <option value="">All genres</option>
+                </select>
+            </div>
+            <div class="filter-section">
+                <label for="wishlistNotesFilter">Notes</label>
+                <select id="wishlistNotesFilter" class="filter-select">
+                    <option value="all">All books</option>
+                    <option value="with">With notes</option>
+                    <option value="without">Without notes</option>
+                </select>
+            </div>
+            <div class="filter-actions">
+                <button type="button" class="filter-apply" id="wishlistApplyFilters">Apply filters</button>
+                <button type="button" class="filter-reset" id="wishlistResetFilters">Reset</button>
+            </div>
+        </div>
+        <p class="search-feedback" id="wishlistSearchFeedback" hidden>No books match your search or filters.</p>
+    </form>
+
+    <div class="wishlist-grid">
+        <article class="wishlist-item wishlist-item-add" aria-label="Add a book to wishlist">
+            <button type="button" class="wishlist-add-card-btn" id="toggleWishFormCard">
+                <div class="wishlist-add-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                </div>
+                <span class="wishlist-add-label">Add to your<br>Wishlist</span>
+            </button>
+        </article>
+
+        {% if wishlist_books %}
+        {% for book in wishlist_books %}
+        {% set book_payload = {
+            'id': book.id,
+            'title': book.title,
+            'author': book.author,
+            'status': book.status,
+            'genre': book.genre,
+            'pages': book.pages,
+            'notes': book.notes,
+            'cover_url': url_for('static', filename=book.cover if book.cover else 'img/book0.png'),
+            'retailer_link': book.retailer_link
+        } %}
+        <article class="wishlist-item" data-book='{{ book_payload | tojson }}'>
+            <form method="POST" action="{{ url_for('delete_book', book_id=book.id) }}" class="wishlist-delete-form" onsubmit="return confirm('Remove this book from your wishlist?');">
+                <button type="submit" class="wishlist-delete-btn" aria-label="Delete from wishlist">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </form>
+            <div class="wishlist-cover">
+                <img src="{{ url_for('static', filename=book.cover if book.cover else 'img/book0.png') }}" alt="{{ book.title }} cover">
+            </div>
+            <div class="wishlist-info">
+                <h3 class="wishlist-title">{{ book.title }}</h3>
+                <p class="wishlist-author">by {{ book.author }}</p>
+                <a href="{{ url_for('create', prefill_id=book.id) }}" class="cta wishlist-add-library-btn" onclick="event.stopPropagation();">+Add to my Library</a>
+            </div>
+        </article>
+        {% endfor %}
+        {% endif %}
+    </div>
+</section>

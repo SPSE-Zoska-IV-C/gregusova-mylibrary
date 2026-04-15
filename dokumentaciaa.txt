@@ -1,0 +1,189 @@
+MyLibrary je webová aplikácia, ktorá funguje primárne ako virtuálny čítateľský denník. Používateľ si môže do svojej virtuálnej knižnice pridať knihy, ktoré číta, už dočítal, alebo má v pláne čítať. Ku každej knihe môže pridať vlastné hodnotenie a poznámky (notes). Okrem toho, aplikácia poskytuje zhrnutie užívateľovych štatistík, ako je počet prečítaných strán, dočítaných kníh, či najčítanejšieho žánru v mesiaci. Prvky aplikácie na zaznamenávanie informacií o knihách sú inšpirované mobilnou aplikáciou „Bookshelf“. Cieľom aplikácie je vytvoriť miesto, kde môže mať užívateľ záznamy o svojich knihách na jednom mieste (jedno miesto pre fyzické aj elektronické knihy). Časť aplikácie so štatistikami o čítaní by mala používateľovi poskytnúť lepší prehľad o svojich čítateľských návykoch, poprípade slúžiť ako motivácia na pokračovanie v čítaní. 
+Aplikácia je vytvorená pomocou frameworku Pythonu určeného na vývoj webových aplikácií, Flasku. Ďalej využíva HTML, CSS a JavaScript. Databázy sú spravované pomocou frameworku SQLAlchemy, ktorý umožňuje prácu s databázou prostredníctvom objektovo orientovaného prístupu. Databáza spravuje zoznam používateľov a ich osobné knižnice. Ilustrácie a ikony v aplikácií sú robené v programe ArtRage, určenom na digitálne kreslenie.
+Okrem zaznamenávania svojho čítateľského denníka a šatistík, má užívateľ možnosť vytvoriť si wishlist, z ktorého vie knihy presunúť do svojej knižnice. Pri pridávaní kníh do svojej virtuálnej knižnice má MyLibrary výber obálok (coverov), z ktorých si môže užívateľ vybrať tú, s ktorou sa kniha v knožnici zobrazí. Zároveň má však možnosť pridať vlastný obal. 
+Aplikácia MyLibrary motivuje užívateľa čítať a zároveň mu umožňuje vytvoriť si organizovnú knižnicu so záznamami  o fyzických, aj elektronických knihách. Môže taktiež zaznamenať svoje myšlienky ohľadom svojích kníh pomocou poznámok, či hodnotením jednotlivých kníh.
+
+    1  Súčasný stav riešenej problematiky doma a v zahraničí
+Organizácia osobných čitateľských zoznamov je bežná pre mnohých milovníkov kníh.  Medzinárodne dominujú platformy ako Goodreads (funguje ako sociálna sieť), či StoryGraph. Tieto aplikácie sú však zbytočne komplexné pre užívateľa, ktorý chce spravovať iba svoj osobný čitateľský zoznam. V aplikáciach uvedených vyššie je taktiež kladený veľký dôraz na komunitné prvky aplikacií, ako je zdieľanie svojich zoznamov s inými používateľmi, či možnosť sledovať iných užívateľov. 
+Kým veľké platformy sú dizajnované ako sociálne siete pre knihy, individuálny používateľ nie vždy potrebuje feed, priateľov, odznaky či pokročilé analytiky, ale skôr rýchly vstup, prehľadnosť a kontrolu nad vlastnými údajmi. Preto si mnoho čítateľov vytvára vlastné riešenia, v podobe tabuliek, či poznámkovými nástrojmi typu Notion. Tieto riešenia sú flexibilné, no neposkytujú možnosti ako nahrávanie obrázkov, či jednoduchú navigáciu. Po čase sa  takýto hárok môže stať preplneným a neprehľadným, čo môže znížiť motiváciu zoznam používať
+	MyLibarary  umožňuje umožňuje užívateľom privátne spravovať svoj čitateľský zoznam. Zároveň poskytuje užívateľovi údaje o jeho čitateľských návykov, formou štatistík vytvorených z ním zadaných údajov. Užívateľia si môžu udržiavať si prehľad o knihách ktoré čítajú, respektíve majú v pláne prečítať.  Aplikácia má tiež minimalistickú informačnú architektúru,  čo umožňuje intuitívnu orientáciu v aplikácii. 
+    2 Cieľ práce
+Cieľom práce je navrhnúť jednoduchú webovú aplikáciu postavenú na technológii Flask, ktorá používateľovi umožní pohodlné spravovanie ich knižného zoznamu. Aplikácia má predovšetkým slúžiť uživateľom, ktorý nechce riešiť sociálne väzby v aplikcii. Dôraz je kladený na jednoduchý prístup, rýchli zápis nových položiek, jednoduchá úprava existujúcich položiek, možnosť filtrovania, podľa kritérií, ako sú autor, názov, žáner, status (dočítané, teraz čítam, chcem prečítať). Súčasťou aplikácie je taktiež možnosť výberu cover designu, či nahranie vlastného designu, aby sa následne zobrazovali v hlavnej sekcii aplikácie „Moja Knižnica“. To dáva používateľovi väčšiu kontrolu nad estetickou stránkou jeho zoznamu. 
+Cieľ práce je zároveň vedome obmedzený. Aplikácia nechce konkurovať rozsiahlym službám so sociálnymi funkciami, ale ponúknuť „ľahkú“ alternatívu pre tých, ktorí uprednostňujú jednoduchosť a súkromie. To sa premieta aj do požiadaviek na zaťaženie systému a výkonnosť: už pri návrhu sa počíta s tým, že pôjde o osobný nástroj s desiatkami až stovkami záznamov, ktorý musí zostať svižný a stabilný v lokálnych podmienkach. Dôležitým cieľom je aj čitateľnosť a udržiavateľnosť kódu, aby bolo možné aplikáciu jednoducho rozšíriť alebo upraviť podľa potreby.
+	Napokon, cieľom je ukázať, že aj malé, sústredené riešenie dokáže priniesť vysokú pridanú hodnotu, pokiaľ rešpektuje potreby a limity používateľa. Aplikácia má byť nástrojom, ktorý robí jednu vec, ale robí ju dobre, umožňuje viesť si osobný zoznam „chcem čítať“ bez rušivých elementov, rýchlo, spoľahlivo a vo vlastnom jazyku. Úspech práce sa preto bude hodnotiť menej počtom funkcií a viac tým, nakoľko prirodzene a pohodlne sa s aplikáciou pracuje pri každodennom používaní.
+    3 Použité aplikácie a technológie
+	Pri realizácii projektu boli použité nástroje a technológie, ktoré sú široko podporované a vhodné pre tvorbu webových aplikácií. Výber technológií bol vedený požiadavkou jednoduchosti, stability a dobrej dokumentácie.
+       Python a Flask
+	Jadrom aplikácie je programovací jazyk Python vo verzii 3.11.9, ktorý patrí medzi najpopulárnejšie jazyky pre vývoj webových aplikácií vďaka čitateľnej syntaxi a širokému výberu knižníc. Na stavbu webovej aplikácie sme zvolili mikroframework Flask, ktorý poskytuje základné nástroje pre routing, templating, no zároveň  ponecháva voľnosť pri výbere ďalších komponentov. Flask sme zvolili, pretože je ideálny pre tvorbu menších až stredných projektov. Flask má systém šablón Jinja2, ktorý umožňuje oddelenie prezentačnej logiky od aplikačnej logiky a zjednodušuje prácu s  obsahom v HTML. Podporuje aj rozšírenia, ktoré rozširujú funkcionalitu frameworku o autentifikáciu, správu relácií a prácu s databázami.
+
+
+3.2 SQLite a SQLAlchemy
+	Pre uchovávanie dát aplikácia využíva relačnú databázu SQLite, ktorá je vďaka svojej jednoduchosti ideálna pre menšie projekty, ako je tento. SQLite neukladá dáta na vzdialený databázový server, ale do jediného súboru, čo zjednodušuje zálohovanie, migráciu a prenositeľnosť celej aplikácie. Pre komunikáciu s databázou je použitá  knižnica SQLAlchemy, ktorá umožňuje pracovať s databázovými záznamami objektovo-orientovaným spôsobom tým pádom nie je potrebné písať priamo SQL dotazy. Tým sa zvyšuje čitateľnosť kódu a znižuje riziko chýb. Flask-SQLAlchemy je rozšírenie, ktoré integruje SQLAlchemy do prostredia Flasku.
+3.3 Autentifikácia a bezpečnosť
+	Pre správu používateľských účtov a autentifikáciu je využitá knižnica Flask-Login, ktorá zjednodušuje prácu s prihlasovaním, odhlasovaním a ochranou konkrétnych častí aplikácie pred neautorizovaným prístupom. Heslá sú v databáze ukladané v hashovanej podobe pomocou knižnice Werkzeug, ktorá je súčasťou Flasku a poskytuje funkcie pre bezpečné hashovanie pomocou algoritmov (PBKDF2, bcrypt). Pri práci s formulármi je aplikácia chránená proti CSRF (Cross-Site Request Forgery) útokom pomocou Flask-WTF. Flask-WTF je rozšírenie, ktoré integruje knižnicu WTForms. Tá zároveň zjednodušuje validáciu vstupov na strane servera a generovanie formulárových polí v šablónach.
+3.4 HTML a CSS
+	Prezentačná vrstva aplikácie je postavená na HTML5 a CSS3. Pre štýlovanie je použité vlastné CSS, ktoré umožňuje vytvoriť jednotný vzhľad aplikácie. Zároveň nám dáva plnú kontrolu nad dizajnom používateľského rozhrania. Štýly sú organizované tak, aby aplikácia bola responzívna a správne sa zobrazovala na rôznych zariadeniach a veľkostiach obrazoviek.  HTML štruktúra aplikácie využíva sémantické elementy ako <header>, <main>, <nav> a <section>, čo zlepšuje čitateľnosť kódu. Šablóny sú organizované do základného layout súboru, z ktorého dedia ostatné stránky, čo zabezpečuje konzistentný vzhľad a znižuje duplicitu kódu.
+
+
+3.5 Vývojové nástroje a prostredie
+	Na vývoj aplikácie bol použitý textový editor Visual Studio Code, ktorý ponúka rozšírenia pre prácu s Pythonom, zvýrazňovanie syntaxe, integrovaný terminál a podporu pre ladenie kódu. Na správu závislostí projektu slúži súbor requirements.txt, ktorý obsahuje zoznam všetkých potrebných knižníc spolu s ich verziami, čo uľahčuje reprodukovateľnosť prostredia na rôznych systémoch (alebo pri nahrávaní na verejnú doménu). Pre zálohovanie bol použitý systém Git (platform GitHub), ktorý umožňuje sledovanie zmien a návrat k predchádzajúcim verziám v prípade potreby.
+3.6 Správa súborov a nahrávanie obrázkov
+	Obálky kníh sú nahrávané cez štandardný HTML formulár s typom input file a ukladané na server do vyhradené priečinka (static/uploads). Pri nahrávaní sa kontroluje typ súboru (povolené formáty PNG, JPG, JPEG, GIF) a ásledne sa súbor uloží pod bezpečným názvom generovaným knižnicou Werkzeug. Takto sa predchádza kolíziám názvov aj potenciálnym bezpečnostným rizikám.
+3.7 JavaScript
+	V aplikácii je využitý aj JavaScript, ktorý slúži na vylepšenie interaktivity používateľského rozhrania na strane klienta. Hoci hlavná logika aplikácie beží na serveri pomocou Flasku, JavaScript poskytuje okamžitú spätnú väzbu používateľovi a zlepšuje celkovú používateľskú skúsenosť bez nutnosti opätovného načítania stránky. JavaScript je v projekte využitý najmä na dynamickú validáciu formulárov pred ich odoslaním na server, čo umožňuje okamžité upozornenie používateľa na chyby vo vstupoch ešte pred tým, než sú dáta odoslané. JavaScript taktiež umožňuje náhľad vybraného obrázka pred jeho nahratím, čo používateľovi umožňuje skontrolovať vybraný súbor ešte pred odoslaním formulára. Kód je napísaný v JavaScripte bez použitia externých frameworkov, čo znižuje závislosť na externých knižniciach a zjednodušuje údržbu projektu. Všetky JavaScriptové skripty sú umiestnené v samostatných súboroch v priečinku static/js a sú načítavané v HTML šablónach podľa potreby konkrétnej stránky.
+
+
+3.8 Grafické prvky a dizajnom
+	Pri tvorbe vizuálnej stránky aplikácie bol využitý grafický program ArtRage, ktorý je určený na digital art tvorbu. Slúžil na vytvorenie vlastných ikon a grafických prvkov používateľského rozhnia. Pomocou tohto nástroja boli navrhnuté obálky kníh, ktoré sú použité ako obrázky, ktoré môže používateľ zvoliť ako zobrazenú „obálku“, ak používateľ nenahrá vlastnú obálku. Taktiež bol použitý na vytvorenie avatarov na profilový obrázok a jeho orámovanie, či ikony trofeí Tieto grafické prvky boli vytvorené s dôrazom na estetickú konzistenciu a jednoduché, intuitívne ikony.
+
+       
+       
+    4 Dizajn a vizuálny štýl aplikácie
+	Základný nápad a vizuál MyLibrary vznikali iteratívne priamo počas
+vývoja. Cieľom je vytvoriť pokojné, čitateľné prostredie pre
+milovníkov kníh, kde sa funkcionalita stretáva s jemnou estetikou.
+Rozhranie je navrhnuté s dôrazom na prehľadnosť, zrozumiteľnosť
+a konzistentné správanie komponentov.
+	Typografia vychádza zo systémových sans‑serif fontov (napr. Segoe UI,
+Roboto), aby bola aplikácia prirodzene čitateľná na rôznych
+platformách bez nutnosti sťahovať externé písma. Nadpisy sú
+výraznejšie, s mierne negatívnym kerningom pre moderný vzhľad,
+bežný text má väčšiu medzeru medzi riadkami a dostatočný kontrast.
+	Farebná paleta má „cozy bookworm" charakter s teplými odtieňmi.
+Primárna textová farba je #6B4C41. Pozadie využíva jemný gradient
+#E8DDD4 → #DCCFC6 → #D4C5BA, ktorý dodáva stránke hĺbku bez rušenia
+obsahu. Karty a panely používajú svetlý podklad #FBF8F4. Akčné prvky
+pracujú s akcentmi #A36B62 (primárny) a #B98174 (sekundárny); pre
+upozornenia je určená farba #AF4D1F. Zaoblené rohy, jemné tiene a decentné prechody pri hover/active stavoch podporujú príjemný a vizuálne zaujímavý pocit z používania.
+	Tlačidlá sú zjednotené naprieč aplikáciou. Primárne tlačidlá majú akcentné pozadie (#A36B62), svetlý text a „pill" tvar. Pri prejdení myšou reagujú zvýraznením farby a tieňom, disabled stavy sú zosvetlené a nepôsobia rušivo. Sekundárne tlačidlá („ghost") majú priehľadný podklad s jemnou hranou, vhodné pre menej dominantné akcie ako zatváranie panelu či doplnkové voľby. 
+	Ikonografia je jednoduchá a konzistentná. V záhlaví sa nachádza ikonka kníh, ktorá spolu s wordmarkom „My Library" tvorí vizuálnu identitu aplikácie. Navigačné prvky využívajú drobné SVG ikony a sú zladené s paletou, aby nepôsobili rušivo. Fixná spodná navigácia na mobile zabezpečuje rýchly prístup k hlavným sekciám; na desktope sa mení na kompaktný bočný panel, ktorý sa po „hover" rozšíri a zobrazí textové popisky. Rozloženia využívajú CSS grid a flex. Na malých obrazovkách sa obsah láme do jedného stĺpca, zväčšujú sa interaktívne zóny a klikateľné plochy. Na väčších obrazovkách bočný sidebar uvoľňuje priestor pre hlavný obsah, ktorý získava viac prehľadnosti, karty majú jednotnú mriežku pre udržanie kompozície. 
+	Špecifickým prvkom je výber žánrov pri pridávaní knihy. Namiesto voľného textu sa používajú „tagy" so skupinami (Fiction, Non‑fiction, Fantasy, Science Fiction, Romance, Mystery / Crime, Thriller / Suspense, Horror, Historical, Children’s / Young Adult). Každý žáner má priradenú farbu z „earthy“ farabnej palety, ktorá je okrem samotného tagu použitá aj v podstránke štatistík. Tu sa vyuívajú na jasné  rozlíšenie žánrov v grafoch. Podskupiny (subžánre) preberajú farbu svojej hlavnej skupiny cez CSS premenné a data‑atribúty, čo zaručuje konzistentný vzhľad. Používateľ môže vybrať maximálne päť tagov; vybrané sa serializujú do skrytého poľa tak, aby boli čitateľné pre server. 
+	Štatistiky čítania tvoria samostatnú vizuálnu jednotku s prepínačom „By Day / By Month". Stĺpcové grafy nadväzujú na akcentnú paletu a majú jasné popisky. Pod grafmi sú šípky na posun medzi mesiacmi a rokmi. Prehľad sa na klik dynamicky aktualizuje cez endpoint /stats_data, takže sa zmení len grafická časť a nie celá stránka; tým sa znižuje latencia a zlepšuje plynulosť. Zvolený mesiac sa pri načítaní predvolene nastaví na aktuálny. Prístupnosť (a11y) je podporená zvýraznenými fokusovými stavmi, jasným kontrastom textu a čitateľnými popiskami. 
+	
+	Profilové obrázky (avatary) sú vytvorené ako vlastná grafika pre aplikáciu a postupne sa odomykajú za dosiahnuté míľniky. Medzi ne patria najmä počty prečítaných kníh (napr. 5/10/15/20) a počty prečítaných strán (napr. 500/2000/5000/7000). Používateľ si môže z odomknutých možností vybrať preferovaný avatar a nastaviť farbu pozadia. Pred dosiahnutím akéhokoľvek míľnika sú k dispozícii štyri možnosti avatara. Overenie odomknutia prebieha aj na strane servera, aby sa predišlo obchádzaniu pravidiel a zachovala sa férovosť. Každý avatar je navrhnutý ako jedinečný motív; sada je zámerne rozmanitá, aby si každý používateľ našiel štýl, ktorý mu sedí. Zároveň bola udržiavaná jednotná kresba a konzistentná paleta, aby kolekcia pôsobila súrodým dojmom aj pri rôznych témach a veľkostiach zobrazenia. 
+	
+	Interaktívne prvky majú dostatočnú veľkosť klikacej plochy. Texty sa neprekrývajú, riadkovanie je konzistentné a komponenty majú zmysluplnú hierarchiu. Vizuál je navrhnutý tak, aby pôsobil príjemne aj pri dlhšom prezeraní knižnice, vytváral pocit poriadku a zároveň umožňoval jednoduché rozšírenia do budúcna (napr. ďalšie grafy, zobrazenia alebo motívy). Celková identita MyLibrary tak spája funkčnosť s jemnou estetikou, vhodnou pre knižných nadšencov. 
+5 Komponenty aplikácie
+	Aplikácia MyLibrary je postavená na súbore opakovaných komponentov, ktoré zabezpečujú jednotné ovládanie a konzistentný vzhľad na všetkých podstránkach. Základom je spoločný layout v šablónach Jinja2, z ktorého dedia jednotlivé stránky. Vďaka tomu sa navigácia, informačné hlášky, formulárové prvky a hlavné vizuálne pravidlá správajú rovnako v celej aplikácii.
+
+5.1 Navigačný panel
+	Navigačný panel zabezpečuje rýchly prechod medzi hlavnými časťami systému. Obsahuje odkazy na sekcie Moja knižnica, Profil, Pridať knihu a Štatistiky. V závislosti od zariadenia sa mení jeho rozloženie: na menších obrazovkách je riešený ako spodná navigácia, na väčších ako bočný panel. Aktívna položka je vizuálne zvýraznená, aby mal používateľ trvalý prehľad o aktuálnej polohe v aplikácii.
+	Panel zároveň reaguje na stav autentifikácie. Prihlásenému používateľovi zobrazuje personalizované prvky (pozdrav a odhlásenie), neprihlásenému ponúka odkazy na prihlásenie a registráciu. Takéto správanie znižuje počet nepotrebných krokov a zlepšuje orientáciu pri prvom použití aplikácie.
+
+5.2 Pätička
+	Pätička plní doplnkovú informačnú funkciu. V aktuálnej verzii je navrhnutá minimalisticky a slúži najmä na vizuálne ukončenie stránky bez rušenia hlavného obsahu. Je pripravená na budúce rozšírenie o právne odkazy, kontaktné údaje alebo stručné technické informácie o verzii aplikácie.
+	Z dizajnového hľadiska využíva rovnaký štýlový jazyk ako zvyšok rozhrania, čím zachováva jednotnú identitu systému.
+
+5.3 Komponent autentifikácie a používateľského účtu
+	Autentifikačný komponent je implementovaný pomocou knižnice Flask-Login. Jeho úlohou je správa relácie používateľa, overenie prístupu na chránené podstránky a riadenie prechodov medzi stavmi prihlásený/neprihlásený používateľ. Prihlásenie a registrácia sú realizované formulármi Flask-WTF, ktoré zabezpečujú serverovú validáciu a ochranu pred CSRF útokmi.
+	Súčasťou účtu je používateľský profil, kde je možné spravovať avatar a súvisiace profilové nastavenia. Komponent je prepojený s databázovou vrstvou tak, aby používateľ pracoval výhradne so svojimi dátami.
+
+5.4 Knižnica, wishlist a formulár pre knihu
+	Kľúčovým komponentom aplikácie je knižnica používateľa, ktorá zobrazuje jednotlivé knihy vo forme kariet. Každá karta obsahuje základné metadáta (názov, autor, stav čítania, žánre, obálka) a je navrhnutá tak, aby podporovala rýchle skenovanie obsahu. Nad zoznamom sú dostupné funkcie filtrovania, vyhľadávania a radenia.
+	Wishlist (Want to Read) je logicky prepojený s profilovou časťou a slúži ako vstupný priestor pre plánované tituly. Pri prechode knihy z wishlistu do aktívnej knižnice sa môžu údaje predvyplniť, čo skracuje čas potrebný na vytvorenie záznamu.
+
+5.5 Spracovanie chýb
+	Spracovanie chýb je navrhnuté tak, aby aplikácia zostala stabilná aj pri neplatnom vstupe alebo neúspešnej operácii. Validácia prebieha na úrovni formulárov aj na úrovni serverovej logiky. Používateľ dostáva jasné chybové hlášky pri konkrétnych poliach, prípadne súhrnnú stavovú správu s odporúčaním ďalšieho postupu.
+	Pri nahrávaní súborov sa kontroluje povolený formát a používa sa bezpečné pomenovanie súborov. V prípade chyby aplikácia nepadá, ale používateľa vracia do bezpečného stavu s vysvetlením príčiny problému.
+
+5.6 Práca so stavmi knihy
+	Aplikácia používa tri základné stavy knihy: Want to Read, Reading Now a Already Read. Stav reprezentuje aktuálnu fázu čítania a priamo ovplyvňuje zobrazenie záznamu v zoznamoch, filtroch a štatistických výstupoch.
+	Pri prechode medzi stavmi sa kontroluje konzistentnosť údajov, najmä väzby medzi stavom a dátumami začiatku/ukončenia čítania. Tým sa predchádza logickým nezrovnalostiam a zabezpečuje sa, že následné štatistiky vychádzajú z korektných dát.
+
+5.7 Dátový model komponentov
+	Funkčnú kostru aplikácie tvorí dátový model User – Book – PageLog. Entita User reprezentuje účet používateľa, Book uchováva bibliografické a stavové údaje o konkrétnom titule a PageLog eviduje priebežné denné zápisy prečítaných strán.
+	Tento model umožňuje oddeliť statické informácie o knihe od časových záznamov čítania. Výsledkom je lepšia čitateľnosť dát, jednoduchšie filtrovanie a kvalitnejší základ pre analytické funkcie.
+
+5.8 Pridávanie knihy – vstupy a využitie údajov
+	Komponent pridávania knihy zhromažďuje všetky údaje potrebné pre správu titulu v systéme. Povinné vstupy tvoria názov, autor, žáner a počet strán. Voliteľné vstupy zahŕňajú hodnotenie, poznámky, dátumy čítania, priebežne prečítané strany, výber obálky alebo vlastný upload a prípadne externý odkaz na obchod.
+	Po uložení sa tieto údaje používajú vo viacerých vrstvách aplikácie: v knižnici (zobrazenie a filtre), v profile (správa položiek) aj v štatistikách (výpočty súhrnných metrík). Komponent preto plní nielen vstupnú, ale aj integračnú úlohu medzi jednotlivými časťami systému.
+
+5.9 Komponent štatistík (Stats page)
+	Podstránka štatistík poskytuje prehľad kľúčových metrík čítania. Základné karty zobrazujú počet kníh, počet dočítaných titulov, celkový počet prečítaných strán a priemerné hodnotenie. Hodnoty sa počítajú z dát modelov Book a PageLog, pričom denné logy strán majú prioritu pre presnejšie časové vyhodnotenie.
+	Grafická časť obsahuje dva režimy: denné zobrazenie (By Day) pre zvolený mesiac a mesačné zobrazenie (By Month) pre zvolený rok. Prepínanie mesiacov a rokov prebieha bez plného obnovenia stránky cez endpoint /stats_data, ktorý vracia JSON payload len pre grafy. Súčasťou podstránky je aj žánrové rozdelenie, najlepšie hodnotená kniha mesiaca a najčítanejší autor.
+
+6 Autentifikácia
+	Autentifikácia zabezpečuje, aby k osobným údajom a funkciám aplikácie mali prístup iba oprávnení používatelia. V projekte MyLibrary je realizovaná serverovo pomocou Flask-Login a súvisiacich bezpečnostných mechanizmov frameworku Flask.
+
+6.1 Registrácia a prihlásenie používateľa
+	Aplikácia obsahuje samostatné podstránky pre registráciu a prihlásenie. Pri registrácii sa overuje unikátnosť používateľského mena a e-mailu. Prihlásenie prebieha overením zadaných údajov voči databázovému záznamu používateľa.
+	Po úspešnom prihlásení sa vytvorí aktívna používateľská relácia a používateľ je presmerovaný na relevantnú časť aplikácie. V prípade neúspechu sa zobrazí chybové hlásenie bez odhalenia citlivých interných detailov.
+
+6.2 Ochrana hesiel a relácií
+	Heslá sa neukladajú v otvorenej podobe, ale ako hash vytvorený knižnicou Werkzeug. Pri overovaní sa porovnáva hash z databázy s hodnotou odvodenou zo zadaného hesla. Tým sa výrazne znižuje riziko kompromitácie účtov pri úniku databázy.
+	Používateľská relácia je spravovaná cez Flask-Login. Aplikácia tak vie spoľahlivo určiť, či je používateľ autentifikovaný, a podľa toho prispôsobiť navigáciu aj dostupné operácie.
+
+6.3 Chránené podstránky a autorizácia
+	Podstránky pracujúce s osobnými dátami (napr. profil, knižnica, vytváranie záznamov, štatistiky) sú chránené dekorátorom login_required. Neprihlásený používateľ je pri pokuse o prístup presmerovaný na prihlasovaciu stránku.
+	Na úrovni databázových dotazov sa navyše kontroluje vlastníctvo záznamov podľa identifikátora používateľa. Používateľ teda nemôže pristupovať k dátam iného účtu ani pri manuálnej úprave URL.
+
+6.4 Validácia a bezpečnostné prvky formulárov
+	Formuláre registrácie a prihlásenia využívajú Flask-WTF, ktorý poskytuje CSRF ochranu a jednotnú validáciu vstupov. Tým sa obmedzuje riziko podvrhnutých požiadaviek a zvyšuje odolnosť aplikácie voči bežným útokom na webové formuláre.
+	Autentifikačná vrstva je navrhnutá tak, aby bola rozšíriteľná aj do budúcna, napríklad o pokročilé obnovovanie hesla, dvojfaktorové overenie alebo detailnejšie pravidlá bezpečnosti prihlásenia.
+
+7 Databázový systém
+	Databázová vrstva aplikácie MyLibrary je postavená na relačnej databáze SQLite a ORM knižnici SQLAlchemy. Toto riešenie je vhodné pre menší až stredný projekt, pretože umožňuje jednoduchú správu dát bez potreby samostatného databázového servera. Dáta sú uložené v jednom databázovom súbore, čo zjednodušuje prenos projektu, zálohovanie aj nasadenie v lokálnych podmienkach.
+	Komunikácia s databázou prebieha objektovo-orientovaným spôsobom cez modely. Vývojár pracuje s entitami aplikácie (používateľ, kniha, stránkové logy) a SQLAlchemy zabezpečuje mapovanie na relačné tabuľky. Tým sa zvyšuje čitateľnosť kódu, znižuje množstvo ručne písaných SQL dopytov a znižuje riziko implementačných chýb.
+
+7.1 Dátový model databázy
+	Jadro databázy tvoria tri hlavné entity: User, Book a PageLog. Entita User reprezentuje účet používateľa a obsahuje identifikačné údaje, prihlasovacie údaje v hashovanej podobe a profilové nastavenia. Entita Book reprezentuje konkrétnu knihu v osobnej knižnici používateľa. Uchováva názov, autora, žánre, počet strán, stav čítania, hodnotenie, poznámky, dátumy a zvolenú obálku. Entita PageLog slúži na evidenciu denného čítania strán.
+	Vzťahy medzi entitami sú navrhnuté ako 1:N. Jeden používateľ môže mať viacero kníh a viacero stránkových logov. Jeden záznam knihy môže mať viacero záznamov v PageLog. Táto štruktúra umožňuje oddeliť statické údaje knihy od časových údajov o čítaní, čo je dôležité pre správne vyhodnocovanie štatistík.
+
+7.2 Tabuľky a ich význam
+	Tabuľka user uchováva používateľské účty. Kľúčové stĺpce sú id, email, username, password_hash, profile_picture a profile_bg_color. Tabuľka book obsahuje bibliografické a stavové dáta: user_id, title, author, genre, pages, cover, status, notes, rating, pages_read, start_date, finish_date a retailer_link. Tabuľka log_page eviduje denné zápisy strán cez stĺpce user_id, book_id, log_date a pages.
+	Návrh tabuliek je orientovaný na praktické potreby aplikácie. Väčšina operácií v používateľskom rozhraní (filtrovanie kníh, prehľady stavu čítania, grafy strán) je priamo odvodená z týchto troch tabuliek. Vďaka tomu je dátový tok medzi backendom a frontendom jednoznačný a udržiavateľný.
+
+7.3 Integrita a konzistencia dát
+	Integrita údajov je zabezpečená cudzími kľúčmi a validačnou logikou na aplikačnej vrstve. Každý záznam knihy je viazaný na existujúceho používateľa cez user_id. Stránkové logy sú viazané na používateľa a voliteľne aj na konkrétnu knihu. Pri práci s dátami sa zároveň kontroluje vlastníctvo záznamov, aby používateľ nemohol pristupovať k cudzím údajom.
+	Konzistencia je podporená aj pravidlami pre stavy knihy a dátumy čítania. Aplikácia pri ukladaní overuje, či vstupy dávajú logický zmysel (napr. väzba medzi stavom knihy a dátumami). Tým sa predchádza vzniku nekonzistentných záznamov, ktoré by znehodnocovali analytické výstupy.
+
+7.4 Využitie databázy v štatistikách
+	Štatistická vrstva kombinuje údaje z tabuliek book a log_page. Celkový počet prečítaných strán sa počíta primárne zo stránkových logov (sum(pages) v PageLog), pričom pri absencii logov sa používa hodnota pages_read z knihy. Denné a mesačné grafy sú odvodené z agregácie PageLog podľa dátumu. Tým sa dosahuje presnejšie časové vyhodnotenie čítania.
+	Ďalšie metriky, ako počet dočítaných kníh, priemerné hodnotenie, najlepší titul mesiaca alebo najčítanejší autor, sú odvodené z údajov v tabuľke book s využitím filtrovania podľa stavu a dátumov. Databáza tak priamo podporuje všetky analytické funkcie dostupné na stránke štatistík.
+
+7.5 Inicializácia a rozšíriteľnosť schémy
+	Pri štarte aplikácie sa databázové tabuľky inicializujú automaticky (create_all), čo zjednodušuje prvé spustenie projektu. Aplikácia zároveň obsahuje pomocnú logiku na doplnenie niektorých novších stĺpcov v existujúcej databáze, aby bola zachovaná kompatibilita medzi verziami.
+	Databázová vrstva je navrhnutá modulárne a umožňuje ďalšie rozširovanie. V budúcnosti je možné doplniť nové entity (napr. podrobnejšie ciele čítania, exporty alebo rozšírené metriky) bez zásadného zásahu do existujúcej štruktúry jadra systému.
+
+8 Podstránky aplikácie
+	Webová aplikácia MyLibrary je rozdelená do viacerých funkčných podstránok, ktoré spolu tvoria ucelený pracovný tok používateľa – od registrácie, cez správu knižnice, až po vyhodnotenie čitateľských štatistík. Jednotlivé podstránky využívajú spoločný layout, vďaka čomu je prechod medzi nimi konzistentný a intuitívny.
+
+8.1 Prihlásenie a registrácia
+	Vstup do aplikácie zabezpečujú podstránky pre registráciu a prihlásenie používateľa. Registračná stránka umožňuje vytvorenie nového účtu na základe e-mailu, používateľského mena a hesla. Prihlásenie následne overuje existujúce údaje a po úspešnej autentifikácii vytvorí používateľskú reláciu.
+	Tieto podstránky sú navrhnuté jednoducho, s dôrazom na rýchle pochopenie a minimálny počet krokov. V prípade chybného vstupu používateľ dostáva okamžitú spätnú väzbu.
+
+8.2 Moja knižnica
+	Hlavnou pracovnou podstránkou je „Moja knižnica" (mylist), ktorá zobrazuje knihy používateľa vo forme prehľadných kariet. K dispozícii je vyhľadávanie podľa názvu alebo autora, filtrovanie podľa stavu a žánru a viacero spôsobov radenia. Tým sa zabezpečuje rýchla orientácia aj pri väčšom počte záznamov.
+	Z tejto podstránky môže používateľ meniť stav knihy, otvoriť detail záznamu, aktualizovať priebeh čítania alebo knihu odstrániť. Knižnica zároveň zámerne neobsahuje wishlist položky, aby ostal zoznam aktívne čítaných titulov prehľadný.
+
+8.3 Pridanie knihy
+	Podstránka „Pridať knihu" (create) slúži na vytvorenie nového záznamu. Formulár obsahuje povinné údaje (názov, autor, žáner, počet strán) aj rozšírené polia (stav knihy, dátumy, poznámky, hodnotenie, obálka, odkaz na obchod). Používateľ môže zvoliť predpripravenú obálku alebo nahrať vlastný obrázok.
+	Formulár podporuje predvyplnenie údajov z wishlistu, čím sa skracuje čas pri presune knihy do aktívneho čítania. Vstupy sa validujú pred uložením, aby sa zachovala konzistentnosť dát v databáze.
+
+8.4 Profil a wishlist
+	Profilová podstránka spája osobné štatistiky používateľa, správu avatara a prehľad kníh podľa stavu čítania. Obsahuje sekcie „Currently Reading" a „Already Read", pričom každá sekcia ponúka rýchly prehľad relevantných titulov.
+	Do profilu je integrovaný aj wishlist, ktorý slúži na evidenciu plánovaných kníh. Používateľ môže wishlist položky vytvárať, upravovať ich kontext poznámkami a následne ich jedným krokom premeniť na štandardný záznam knihy. Tým sa prepája plánovanie čítania s reálnym čitateľským denníkom.
+
+8.5 Štatistiky
+	Podstránka štatistík poskytuje analytický prehľad čitateľských návykov. Zobrazuje základné sumarizačné metriky (počet kníh, počet dočítaných titulov, počet prečítaných strán, priemerné hodnotenie), grafy po dňoch a mesiacoch a doplnkové ukazovatele (žánrové rozdelenie, top autor, najlepšia kniha mesiaca).
+	Interakcia so štatistikami je riešená dynamicky – prepínanie mesiacov a rokov prebieha cez endpoint /stats_data bez nutnosti úplného obnovenia stránky. Používateľ tak dostáva plynulú prácu s grafmi a okamžitú spätnú väzbu pri zmene obdobia.
+
+9 Spustenie a nasadenie aplikácie
+	Aplikácia MyLibrary je navrhnutá tak, aby bola jednoducho spustiteľná v lokálnom vývojovom prostredí a zároveň pripravená na nasadenie v produkcii. Projekt využíva Python, Flask a databázu SQLite, preto nevyžaduje zložité infraštruktúrne nastavenie. To je výhodné najmä pri školskom alebo menšom projekte, kde je dôležitá rýchla reprodukovateľnosť prostredia.
+	Závislosti projektu sú definované v súbore requirements.txt. Vďaka tomu je možné prostredie pripraviť konzistentne na rôznych zariadeniach. Pri prvom spustení sa databáza inicializuje automaticky, čím sa minimalizuje počet manuálnych krokov pred prvým použitím aplikácie.
+
+9.1 Lokálne spustenie
+	Pre lokálne spustenie je odporúčané vytvoriť virtuálne prostredie Pythonu, nainštalovať závislosti a následne spustiť Flask aplikáciu. Po štarte servera je aplikácia dostupná cez lokálnu URL adresu v prehliadači. Používateľ môže okamžite vykonať registráciu a pracovať s vlastnou knižnicou.
+	Vývojové prostredie je vhodné na testovanie formulárov, overovanie logiky filtrov, správania štatistík a kontrolu responzivity používateľského rozhrania.
+
+9.2 Nasadenie do produkcie
+	Pri produkčnom nasadení sa odporúča spúšťať aplikáciu cez WSGI server a oddeliť vývojové nastavenia od produkčných. Dôležitým krokom je nastavenie bezpečného SECRET_KEY, kontrola prístupových práv k súborom a vhodná konfigurácia priečinkov pre uploadované obrázky.
+	Aj keď SQLite postačuje pre menšie nasadenie, pri vyššom zaťažení je možné databázovú vrstvu migrovať na robustnejší databázový systém. Architektúra aplikácie je navrhnutá tak, aby takáto migrácia bola realizovateľná bez zásadných zmien používateľského rozhrania.
+
+9.3 Údržba a ďalší rozvoj
+	Priebežná údržba zahŕňa najmä aktualizáciu závislostí, kontrolu bezpečnostných nastavení, zálohovanie databázového súboru a monitorovanie správnosti dát. Dôležitá je aj kontrola konzistencie žánrov, stavov kníh a stránkových logov, ktoré ovplyvňujú štatistické výstupy.
+	Z pohľadu budúceho rozvoja je možné doplniť napríklad export dát, pokročilejšie reporty čítania, rozšírené používateľské ciele alebo notifikácie. Súčasná štruktúra projektu poskytuje stabilný základ pre takéto rozšírenia.
+
+Záver
+	MyLibrary je webová aplikácia zameraná na osobnú správu čitateľského denníka. Jej hlavným cieľom je umožniť používateľovi jednoducho evidovať knihy, sledovať priebeh čítania a získavať prehľadné štatistiky bez rušivých sociálnych prvkov. Aplikácia spája praktickú funkcionalitu (knižnica, wishlist, profil, štatistiky) s dôrazom na prehľadnosť a používateľský komfort.
+	Výsledkom práce je funkčný systém postavený na moderných a stabilných technológiách, ktorý potvrdzuje, že aj menší, účelovo zameraný projekt môže priniesť vysokú pridanú hodnotu. Zároveň ide o riešenie, ktoré je pripravené na ďalší rozvoj podľa potrieb používateľa aj budúcich technických požiadaviek.
