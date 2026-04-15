@@ -50,6 +50,7 @@
 
 	<!-- Pages Logged This Month Section -->
 	<section class="monthly-section">
+		
 		<h3>Pages Logged This Month</h3>
 		<div class="monthly-stats">
 			<p class="big-number">{{ stats.pages_read_this_month }}</p>
@@ -58,6 +59,7 @@
 				That's {{ stats.pct_change_per_day|abs }}% {% if stats.pct_change_per_day >= 0 %}more{% else %}less{% endif %} per day than last month
 			</p>
 		</div>
+		<img src="{{ url_for('static', filename='img/decor/bazmek2.png') }}" alt="" class="section-decor" aria-hidden="true">
 	</section>
 
 	<!-- Monthly Activity Section -->
@@ -132,14 +134,17 @@
 				</div>
 				<div class="chart chart-monthly" aria-label="Pages read by month">
 					{% for item in stats.monthly %}
-					<div class="bar-item" title="{{ item.label }}: {{ item.pages }} pages">
+					<div class="bar-item" data-pages="{{ item.pages }}" data-month="{{ item.label }}" data-year="{{ stats.chart_year }}">
 						<div class="bar-wrap">
 							<div class="bar" data-pct="{{ item.pct }}"></div>
 						</div>
 						<div class="bar-label">{{ item.label }}</div>
-						<div class="bar-pages">{{ item.pages }}</div>
 					</div>
 					{% endfor %}
+				</div>
+				<div class="chart-tooltip" id="monthlyTooltip" hidden>
+					<span class="tooltip-pages"></span>
+					<span class="tooltip-date"></span>
 				</div>
 				<div class="chart-yaxis" aria-hidden="true"></div>
 			</div>

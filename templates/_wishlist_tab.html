@@ -6,15 +6,15 @@
                 <h2>Add a Book to Your Wishlist</h2>
                 <button type="button" class="form-close" id="cancelWishForm">&times;</button>
             </div>
-            <form method="POST" action="{{ url_for('want_to_read') }}" class="wish-form" enctype="multipart/form-data">
+            <form method="POST" action="{{ url_for('add_to_wishlist') }}" class="wish-form" enctype="multipart/form-data">
                 <div class="form-grid">
                     <div class="form-field">
                         <label for="wish_title">Title <span class="required">*</span></label>
-                        <input type="text" id="wish_title" name="title" class="form-input" required value="{{ request.form.get('title', '') }}" placeholder="Enter book title">
+                        <input type="text" id="wish_title" name="title" class="form-input" required autocomplete="off" value="{{ request.form.get('title', '') }}" placeholder="Enter book title">
                     </div>
                     <div class="form-field">
                         <label for="wish_author">Author <span class="required">*</span></label>
-                        <input type="text" id="wish_author" name="author" class="form-input" required value="{{ request.form.get('author', '') }}" placeholder="Enter author name">
+                        <input type="text" id="wish_author" name="author" class="form-input" required autocomplete="off" value="{{ request.form.get('author', '') }}" placeholder="Enter author name">
                     </div>
                     <div class="form-field full-width">
                         <label for="genre">Genres (up to 5)</label>
@@ -27,7 +27,7 @@
                     </div>
                     <div class="form-field">
                         <label for="wish_pages">Pages</label>
-                        <input type="number" id="wish_pages" name="pages" class="form-input" min="0" value="{{ request.form.get('pages', '') }}" placeholder="Estimated pages">
+                        <input type="number" id="wish_pages" name="pages" class="form-input" min="0" autocomplete="off" value="{{ request.form.get('pages', '') }}" placeholder="Estimated pages">
                     </div>
                     {% set selected_cover = request.form.get('cover', '') %}
                     <div class="form-field full-width">
@@ -95,11 +95,14 @@
                                                   class="cover-custom-file"
                                                   accept="image/*">
 
-                                                <div class="cover-custom-ui" aria-hidden="true">
+                                                <img class="cover-custom-preview" id="custom-cover-preview" src="" alt="Custom cover preview" hidden>
+
+                                                <div class="cover-custom-ui" id="custom-cover-ui" aria-hidden="true">
                                                     <div class="cover-custom-plus">+</div>
                                                     <div class="cover-custom-text">Add cover</div>
                                                 </div>
                                             </label>
+                                            <button type="button" class="cover-custom-change-btn" id="custom-cover-change" hidden>Pick different image</button>
                                         </div>
                                     </div>
                                 </div>
@@ -127,8 +130,7 @@
     </div>
 
     <form class="wishlist-search" role="search" onsubmit="return false;">
-        <p class="wishlist-search-label">Search wishlist books</p>
-        <label class="sr-only" for="wishlistSearchInput">Search wishlist books</label>
+        <label class="sr-only" for="wishlistSearchInput">Search wishlist</label>
         <div class="search-controls">
             <div class="search-field">
                 <img src="{{ url_for('static', filename='img/icons/search.svg') }}" alt="" aria-hidden="true">
@@ -174,6 +176,7 @@
                 </div>
                 <span class="wishlist-add-label">Add to your<br>Wishlist</span>
             </button>
+            <img src="{{ url_for('static', filename='img/decor/bazmek4.png') }}" alt="" class="wishlist-add-decor" aria-hidden="true">
         </article>
 
         {% if wishlist_books %}

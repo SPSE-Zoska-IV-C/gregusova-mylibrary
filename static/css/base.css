@@ -94,7 +94,10 @@ body {
     display: block;
 }
 
-.top-menu .user-badge,
+.top-menu .sidebar-decor {
+    display: none;
+}
+
 .top-menu nav span[style*='flex:1'] {
     display: none !important;
 }
@@ -147,7 +150,6 @@ h1, h2, h3, h4, h5, h6 {
     background-image: url('../img/icons/reading_now.svg');
 }
 
-.top-menu a[href*='want_to_read']::before,
 .top-menu a[href*='wishlist']::before {
     background-image: url('../img/icons/wishlist.svg');
 }
@@ -270,34 +272,43 @@ h1, h2, h3, h4, h5, h6 {
         margin-left: 4px;
     }
 
-    .top-menu .user-badge,
     .top-menu nav span[style*='flex:1'] {
         display: block !important;
     }
 
-    .top-menu .user-badge {
-        background: #e9ded8;
-        color: #6b4c41;
-        padding: 6px 10px;
-        border-radius: 12px;
-        font-weight: 700;
+    .top-menu .sidebar-decor {
+        display: none;
         margin: auto 0 0;
+        padding: 0.5rem;
     }
 
-    .top-menu .user-badge .label {
-        max-width: 0;
-        opacity: 0;
-        overflow: hidden;
-        white-space: nowrap;
-        transition: max-width 0.2s ease, opacity 0.15s ease;
+    .top-menu .sidebar-decor img {
+        width: 100%;
+        height: auto;
+        object-fit: contain;
     }
 
-    .top-menu:hover .user-badge .label,
-    .top-menu:focus-within .user-badge .label {
-        max-width: 140px;
-        opacity: 1;
+    .top-menu:hover .sidebar-decor,
+    .top-menu:focus-within .sidebar-decor {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 
+    .top-menu .sidebar-greeting {
+        display: block;
+        text-align: center;
+        color: #6b4c41;
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        width: 100%;
+    }
+
+    .top-menu .sidebar-greeting em {
+        color: #a36b62;
+        font-style: italic;
+    }
     .top-menu a:hover {
         background-color: #e9ded8;
     }
@@ -714,11 +725,30 @@ body.panel-open {
     color: #f5a524;
 }
 
-.finish-date-field input[type="date"] {
+.finish-date-field input[type="date"],
+.finish-date-field input.flatpickr-input {
     border-radius: 10px;
     border: 1px solid rgba(107, 76, 65, 0.2);
-    padding: 0.4rem 0.6rem;
+    padding: 0.6rem 0.8rem;
     font-family: inherit;
+    font-size: 0.95rem;
+    color: #46342c;
+    background: #faf7f3;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(70, 52, 44, 0.05);
+}
+
+.finish-date-field input[type="date"]:hover,
+.finish-date-field input.flatpickr-input:hover {
+    border-color: rgba(163, 107, 98, 0.4);
+    box-shadow: 0 2px 6px rgba(163, 107, 98, 0.08);
+}
+
+.finish-date-field input[type="date"]:focus,
+.finish-date-field input.flatpickr-input:focus {
+    outline: none;
+    border-color: #a36b62;
+    box-shadow: 0 0 0 3px rgba(163, 107, 98, 0.1);
 }
 
 .panel-actions {

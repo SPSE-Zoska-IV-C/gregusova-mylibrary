@@ -19,12 +19,12 @@
 
       <div class="form-group">
         <label for="title">Title</label>
-        <input type="text" name="title" id="title" class="form-control" required value="{{ request.form.get('title', prefill_book.title if prefill_book else '') }}">
+        <input type="text" name="title" id="title" class="form-control" required autocomplete="off" value="{{ request.form.get('title', prefill_book.title if prefill_book else '') }}">
       </div>
 
       <div class="form-group">
         <label for="author">Author</label>
-        <input type="text" name="author" id="author" class="form-control" required value="{{ request.form.get('author', prefill_book.author if prefill_book else '') }}">
+        <input type="text" name="author" id="author" class="form-control" required autocomplete="off" value="{{ request.form.get('author', prefill_book.author if prefill_book else '') }}">
       </div>
 
       <div class="form-group">
@@ -45,28 +45,28 @@
 
       <div class="form-group">
         <label for="pages">Number of Pages</label>
-        <input type="number" name="pages" id="pages" class="form-control" min="1" required value="{{ request.form.get('pages', prefill_book.pages if prefill_book else '') }}">
+        <input type="number" name="pages" id="pages" class="form-control" min="1" required autocomplete="off" value="{{ request.form.get('pages', prefill_book.pages if prefill_book else '') }}">
       </div>
 
       <!-- Reading Now only -->
       <div id="pages-read-section" class="form-group">
         <label for="pages_read">Pages Read</label>
-        <input type="number" name="pages_read" id="pages_read" class="form-control" min="0" value="{{ request.form.get('pages_read', prefill_book.pages_read if prefill_book else 0) }}">
+        <input type="number" name="pages_read" id="pages_read" class="form-control" min="0" autocomplete="off" value="{{ request.form.get('pages_read', prefill_book.pages_read if prefill_book else 0) }}">
       </div>
       <div id="start-date-reading" class="form-group">
         <label for="start_date_reading">Start date</label>
-        <input type="date" id="start_date_reading" name="start_date" class="form-control" required value="{{ request.form.get('start_date', prefill_book.start_date.strftime('%Y-%m-%d') if prefill_book and prefill_book.start_date else '') }}">
+        <input type="date" id="start_date_reading" name="start_date" class="form-control" required min="1900-01-01" value="{{ request.form.get('start_date', prefill_book.start_date.strftime('%Y-%m-%d') if prefill_book and prefill_book.start_date else '') }}">
       </div>
 
       <!-- Already Read only -->
       <div id="already-read-section" style="display:none;">
         <div class="form-group">
           <label for="start_date_read">Start date</label>
-          <input type="date" id="start_date_read" name="start_date" class="form-control" disabled value="{{ request.form.get('start_date', prefill_book.start_date.strftime('%Y-%m-%d') if prefill_book and prefill_book.start_date else '') }}">
+          <input type="date" id="start_date_read" name="start_date" class="form-control" disabled min="1900-01-01" value="{{ request.form.get('start_date', prefill_book.start_date.strftime('%Y-%m-%d') if prefill_book and prefill_book.start_date else '') }}">
         </div>
         <div class="form-group">
           <label for="finish_date">Finish date</label>
-          <input type="date" id="finish_date" name="finish_date" class="form-control" disabled value="{{ request.form.get('finish_date', prefill_book.finish_date.strftime('%Y-%m-%d') if prefill_book and prefill_book.finish_date else '') }}">
+          <input type="date" id="finish_date" name="finish_date" class="form-control" disabled min="1900-01-01" value="{{ request.form.get('finish_date', prefill_book.finish_date.strftime('%Y-%m-%d') if prefill_book and prefill_book.finish_date else '') }}">
         </div>
         <div class="form-group">
           <label for="notes">Notes</label>
@@ -86,6 +86,18 @@
 
       <!-- Cover -->
       {% set selected_cover = request.form.get('cover', prefill_book.cover if prefill_book else '') %}
+      {# Check if selected_cover is a custom uploaded image (not in cover_designs) #}
+      {% set is_custom_cover = false %}
+      {% if selected_cover and selected_cover != '__custom__' %}
+        {% set is_custom_cover = true %}
+        {% for design in cover_designs %}
+          {% for variant in design.variants %}
+            {% if variant.file == selected_cover %}
+              {% set is_custom_cover = false %}
+            {% endif %}
+          {% endfor %}
+        {% endfor %}
+      {% endif %}
       <div class="form-group">
         <label for="cover">Choose a Cover Design</label>
         <div class="cover-picker">
@@ -132,7 +144,7 @@
             {% endfor %}
 
             {# Custom uploaded cover (no color variants) #}
-            {% set custom_selected = selected_cover == '__custom__' %}
+            {% set custom_selected = (selected_cover == '__custom__') or is_custom_cover %}
             <div class="cover-design-card cover-design-card--custom{% if custom_selected %} is-selected{% endif %}" data-design="custom">
               <div class="cover-design-wrapper">
                 <div class="cover-display">
@@ -152,11 +164,20 @@
                       class="cover-custom-file"
                       accept="image/*">
 
-                    <div class="cover-custom-ui" aria-hidden="true">
+                    <img class="cover-custom-preview" id="custom-cover-preview" 
+                         src="{% if is_custom_cover %}{{ url_for('static', filename=selected_cover) }}{% endif %}" 
+                         alt="Custom cover preview" 
+                         {% if not is_custom_cover %}hidden{% endif %}>
+
+                    <div class="cover-custom-ui" id="custom-cover-ui" aria-hidden="true" {% if is_custom_cover %}hidden{% endif %}>
                       <div class="cover-custom-plus">+</div>
                       <div class="cover-custom-text">Add cover</div>
                     </div>
                   </label>
+                  <button type="button" class="cover-custom-change-btn" id="custom-cover-change" {% if not is_custom_cover %}hidden{% endif %}>Pick different image</button>
+                  {% if is_custom_cover %}
+                  <input type="hidden" name="existing_custom_cover" value="{{ selected_cover }}">
+                  {% endif %}
                 </div>
               </div>
             </div>

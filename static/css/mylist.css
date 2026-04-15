@@ -71,11 +71,18 @@
     background: #fffefe;
     border: 1px solid rgba(107, 76, 65, 0.12);
     border-radius: 22px;
-    padding: 0.85rem 1.1rem;
+    padding: 0.6rem 0.8rem;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
     box-shadow: 0 10px 24px rgba(107, 76, 65, 0.08);
+    transition: all 0.3s ease;
+    width: fit-content;
+}
+
+.mylist-search.is-expanded {
+    padding: 0.85rem 1.1rem;
+    width: auto;
 }
 
 .search-controls {
@@ -84,21 +91,62 @@
     gap: 0.75rem;
 }
 
+.search-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: none;
+    background: rgba(163, 107, 98, 0.08);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.search-toggle:hover {
+    background: rgba(163, 107, 98, 0.15);
+    transform: scale(1.05);
+}
+
+.search-toggle-icon {
+    width: 20px;
+    height: 20px;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.search-toggle:hover .search-toggle-icon {
+    opacity: 1;
+}
+
+.mylist-search.is-expanded .search-toggle {
+    background: rgba(163, 107, 98, 0.2);
+}
+
+.search-field-wrapper {
+    flex: 1;
+    overflow: hidden;
+    max-width: 0;
+    opacity: 0;
+    transition: max-width 0.3s ease, opacity 0.2s ease;
+}
+
+.mylist-search.is-expanded .search-field-wrapper {
+    max-width: 500px;
+    opacity: 1;
+}
+
 .search-field {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    flex: 1;
-}
-
-.search-field img {
-    width: 22px;
-    height: 22px;
-    opacity: 0.65;
 }
 
 .search-field input {
     flex: 1;
+    min-width: 180px;
     border: none;
     background: transparent;
     font-size: 1rem;
@@ -582,6 +630,81 @@ body.panel-open {
     padding: 1.25rem;
     border: 1px solid rgba(107, 76, 65, 0.1);
     box-shadow: inset 0 2px 4px rgba(107, 76, 65, 0.05);
+    position: relative;
+    min-height: 100px;
+}
+
+.notes-edit-btn,
+.notes-save-btn {
+    position: absolute;
+    bottom: 0.75rem;
+    right: 0.75rem;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    z-index: 2;
+}
+
+.notes-edit-btn {
+    background: linear-gradient(135deg, #d4c4bc 0%, #c9b8ae 100%);
+    color: #6b4c41;
+    box-shadow: 0 3px 10px rgba(107, 76, 65, 0.15);
+}
+
+.notes-edit-btn:hover {
+    background: linear-gradient(135deg, #c9b8ae 0%, #bfaa9f 100%);
+    transform: scale(1.1);
+    box-shadow: 0 5px 15px rgba(107, 76, 65, 0.25);
+}
+
+.notes-save-btn {
+    background: linear-gradient(135deg, #a36b62 0%, #8d5a52 100%);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(163, 107, 98, 0.4);
+}
+
+.notes-save-btn:hover {
+    background: linear-gradient(135deg, #8d5a52 0%, #7a4d46 100%);
+    transform: scale(1.1);
+    box-shadow: 0 6px 18px rgba(163, 107, 98, 0.5);
+}
+
+.notes-edit-btn[hidden],
+.notes-save-btn[hidden] {
+    display: none;
+}
+
+.panel-notes-textarea {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    padding-bottom: 3rem;
+    border: 2px solid #d4c4bc;
+    border-radius: 12px;
+    background: #faf7f3;
+    color: #46342c;
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    resize: vertical;
+    min-height: 100px;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.panel-notes-textarea:focus {
+    outline: none;
+    border-color: #a36b62;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(163, 107, 98, 0.12);
+}
+
+.panel-notes-textarea[hidden] {
+    display: none;
 }
 
 .panel-notes h4 {
@@ -607,6 +730,7 @@ body.panel-open {
     margin: 0;
     font-size: 0.95rem;
     min-height: 1.5em;
+    padding-bottom: 2rem;
 }
 
 .panel-notes h4,
@@ -695,11 +819,30 @@ body.panel-open {
     color: #f5a524;
 }
 
-.finish-date-field input[type="date"] {
+.finish-date-field input[type="date"],
+.finish-date-field input.flatpickr-input {
     border-radius: 10px;
     border: 1px solid rgba(107, 76, 65, 0.2);
-    padding: 0.4rem 0.6rem;
+    padding: 0.6rem 0.8rem;
     font-family: inherit;
+    font-size: 0.95rem;
+    color: #46342c;
+    background: #faf7f3;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(70, 52, 44, 0.05);
+}
+
+.finish-date-field input[type="date"]:hover,
+.finish-date-field input.flatpickr-input:hover {
+    border-color: rgba(163, 107, 98, 0.4);
+    box-shadow: 0 2px 6px rgba(163, 107, 98, 0.08);
+}
+
+.finish-date-field input[type="date"]:focus,
+.finish-date-field input.flatpickr-input:focus {
+    outline: none;
+    border-color: #a36b62;
+    box-shadow: 0 0 0 3px rgba(163, 107, 98, 0.1);
 }
 
 .panel-actions {

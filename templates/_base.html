@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MyLibrary</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/flatpickr-theme.css') }}">
     {% block head %}{% endblock %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/book_card.css') }}">
 </head>
@@ -24,8 +26,13 @@
             <a href="{{ url_for('create') }}" title="Add Book"><span class="label">Add Book</span></a>
             <a href="{{ url_for('stats') }}" title="Statistics"><span class="label">Statistics</span></a>
             <span style="flex:1"></span>
+            <div class="sidebar-decor">
+                {% if current_user.is_authenticated %}
+                <span class="sidebar-greeting">Hi <em>{{ current_user.username }}</em></span>
+                {% endif %}
+                <img src="{{ url_for('static', filename='img/decor/bazmek1.png') }}" alt="" aria-hidden="true">
+            </div>
             {% if current_user.is_authenticated %}
-                <span class="user-badge"><span class="label">Hi, {{ current_user.username }}</span></span>
                 <a href="{{ url_for('logout') }}" title="Logout"><span class="label">Logout</span></a>
             {% else %}
                 <a href="{{ url_for('login') }}" title="Login"><span class="label">Login</span></a>
@@ -53,5 +60,8 @@
 <!-- <footer>
     <p>© Jergus.co | Some text.</p>
 </footer> -->
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="{{ url_for('static', filename='js/datepicker-init.js') }}"></script>
 </body>
 </html>

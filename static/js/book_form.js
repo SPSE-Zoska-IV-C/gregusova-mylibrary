@@ -1,4 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
+  // Set max date to today for all date inputs
+  const today = new Date().toISOString().split('T')[0];
+  document.querySelectorAll('input[type="date"]').forEach(input => {
+    input.setAttribute('max', today);
+  });
+
   const readingBtn = document.getElementById('reading-btn');
   const readBtn = document.getElementById('read-btn');
   const statusInput = document.getElementById('status');
@@ -127,9 +133,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update cover preview
     updateCoverPreview(targetInput);
 
-    // Custom upload card selected state
-    if (customCoverCard && customCoverRadio) {
-      customCoverCard.classList.toggle('is-selected', customCoverRadio.checked);
+    // Update card selection state
+    document.querySelectorAll('.cover-design-card').forEach((card) => {
+      card.classList.remove('is-selected');
+    });
+    const selectedCard = targetInput.closest('.cover-design-card');
+    if (selectedCard) {
+      selectedCard.classList.add('is-selected');
     }
   };
 
@@ -163,14 +173,72 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Click on cover card to select first variant (or keep current if one is already selected)
+  designCards.forEach((card) => {
+    card.addEventListener('click', (e) => {
+      // Don't interfere with clicks on color dots, radio inputs, or file inputs
+      if (e.target.closest('.color-dot-wrapper') || 
+          e.target.closest('.color-dot') ||
+          e.target.matches('input[type="radio"]') ||
+          e.target.matches('input[type="file"]') ||
+          e.target.closest('.cover-custom-change-btn')) {
+        return;
+      }
+      
+      // Skip custom cover card (handled separately)
+      if (card.classList.contains('cover-design-card--custom')) {
+        return;
+      }
+      
+      // Check if this card already has a selected radio
+      const radiosInCard = card.querySelectorAll('input[name="cover"]');
+      let selectedRadio = Array.from(radiosInCard).find(r => r.checked);
+      
+      // If no radio in this card is selected, select the first one
+      if (!selectedRadio && radiosInCard.length > 0) {
+        selectedRadio = radiosInCard[0];
+      }
+      
+      if (selectedRadio) {
+        selectedRadio.checked = true;
+        updateSelectionState(selectedRadio);
+      }
+    });
+  });
+
   // Custom cover: selecting a file should select the custom radio option
   if (customCoverFile && customCoverRadio) {
+    const customCoverPreview = document.getElementById('custom-cover-preview');
+    const customCoverUI = document.getElementById('custom-cover-ui');
+    const customCoverChangeBtn = document.getElementById('custom-cover-change');
+
+    const showCustomPreview = (file) => {
+      if (!file || !customCoverPreview) return;
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        customCoverPreview.src = e.target.result;
+        customCoverPreview.hidden = false;
+        if (customCoverUI) customCoverUI.hidden = true;
+        if (customCoverChangeBtn) customCoverChangeBtn.hidden = false;
+      };
+      reader.readAsDataURL(file);
+    };
+
     customCoverFile.addEventListener('change', () => {
       if (customCoverFile.files && customCoverFile.files.length) {
         customCoverRadio.checked = true;
         updateSelectionState(customCoverRadio);
+        showCustomPreview(customCoverFile.files[0]);
       }
     });
+
+    if (customCoverChangeBtn) {
+      customCoverChangeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        customCoverFile.click();
+      });
+    }
   }
 
   // =====================

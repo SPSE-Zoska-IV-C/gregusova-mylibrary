@@ -1,4 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
+  // Set max date to today for all date inputs
+  const today = new Date().toISOString().split('T')[0];
+  document.querySelectorAll('input[type="date"]').forEach(input => {
+    input.setAttribute('max', today);
+  });
+
   const panel = document.getElementById('bookPanel');
   const cards = document.querySelectorAll('.book-card[data-book]');
   const wishlistCards = document.querySelectorAll('.wishlist-item[data-book]:not(.wishlist-item-add)');
@@ -17,11 +23,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const startEl = document.getElementById('panelStart');
   const finishEl = document.getElementById('panelFinish');
   const notesEl = document.getElementById('panelNotes');
+  const notesEditBtn = document.getElementById('notesEditBtn');
+  const notesSaveBtn = document.getElementById('notesSaveBtn');
+  const notesTextarea = document.getElementById('panelNotesEdit');
+  let currentBookId = null;
   const progressSection = document.getElementById('panelProgressSection');
   const progressForm = document.getElementById('progressForm');
   const slider = document.getElementById('progressSlider');
   const sliderValue = document.getElementById('progressValue');
-  const notesField = document.getElementById('progressNotes');
   const completionControls = document.getElementById('completionControls');
   const finishDateInput = document.getElementById('finishDateInput');
   const markFinishedInput = document.getElementById('markFinished');
@@ -111,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const openPanel = (data) => {
     if (!panel) return;
+    currentBookId = data.id || null;
     coverImg.src = data.cover_url || '';
     coverImg.alt = `${data.title || 'Book'} cover`;
     statusEl.textContent = data.status || '';
@@ -145,6 +155,13 @@ document.addEventListener('DOMContentLoaded', () => {
     startEl.textContent = data.start_date || '—';
     finishEl.textContent = data.finish_date || '—';
     notesEl.textContent = data.notes && data.notes.trim().length ? data.notes : 'No notes yet.';
+    // Reset notes editing state
+    if (notesEl && notesTextarea && notesEditBtn && notesSaveBtn) {
+      notesEl.hidden = false;
+      notesTextarea.hidden = true;
+      notesEditBtn.hidden = false;
+      notesSaveBtn.hidden = true;
+    }
 
     // Set up panel action forms
     const panelStatusForm = document.getElementById('panelStatusForm');
@@ -169,7 +186,6 @@ document.addEventListener('DOMContentLoaded', () => {
       slider.value = safeValue;
       slider.disabled = sliderMax === 0;
       sliderValue.textContent = `${safeValue}/${sliderMax}`;
-      notesField.value = data.notes || '';
       progressForm.action = `/book/${data.id}/progress`;
       setCompletionState(sliderMax > 0 && safeValue >= sliderMax);
     } else {
@@ -257,6 +273,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Search toggle functionality
+  const searchToggle = document.getElementById('searchToggle');
+  const searchForm = document.getElementById('searchForm');
+
+  if (searchToggle && searchForm) {
+    searchToggle.addEventListener('click', () => {
+      searchForm.classList.toggle('is-expanded');
+      if (searchForm.classList.contains('is-expanded') && searchInput) {
+        setTimeout(() => searchInput.focus(), 150);
+      }
+    });
+
+    // Collapse when clicking outside (if empty)
+    document.addEventListener('click', (e) => {
+      if (!searchForm.contains(e.target) && searchForm.classList.contains('is-expanded')) {
+        if (!searchInput || !searchInput.value.trim()) {
+          searchForm.classList.remove('is-expanded');
+        }
+      }
+    });
+
+    // Collapse on Escape (if empty)
+    if (searchInput) {
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !searchInput.value.trim()) {
+          searchForm.classList.remove('is-expanded');
+          searchToggle.focus();
+        }
+      });
+    }
+  }
+
   // Filter toggle functionality
   const filterToggle = document.getElementById('filterToggle');
   const filterPanel = document.getElementById('filterPanel');
@@ -312,5 +360,79 @@ document.addEventListener('DOMContentLoaded', () => {
       e.stopPropagation();
     });
   });
+
+  // Notes editing functionality
+  const enterNotesEditMode = () => {
+    if (!notesEl || !notesTextarea || !notesEditBtn || !notesSaveBtn) return;
+    const currentText = notesEl.textContent === 'No notes yet.' ? '' : notesEl.textContent;
+    notesTextarea.value = currentText;
+    notesEl.hidden = true;
+    notesTextarea.hidden = false;
+    notesEditBtn.hidden = true;
+    notesSaveBtn.hidden = false;
+    notesTextarea.focus();
+  };
+
+  const exitNotesEditMode = () => {
+    if (!notesEl || !notesTextarea || !notesEditBtn || !notesSaveBtn) return;
+    notesEl.hidden = false;
+    notesTextarea.hidden = true;
+    notesEditBtn.hidden = false;
+    notesSaveBtn.hidden = true;
+  };
+
+  const saveNotes = async () => {
+    if (!currentBookId || !notesTextarea) return;
+    const newNotes = notesTextarea.value.trim();
+    try {
+      const formData = new FormData();
+      formData.append('notes', newNotes);
+      const response = await fetch(`/book/${currentBookId}/notes`, {
+        method: 'POST',
+        body: formData
+      });
+      const result = await response.json();
+      if (result.success) {
+        notesEl.textContent = newNotes.length ? newNotes : 'No notes yet.';
+        // Update the data-book attribute on the card so reopening shows updated notes
+        const card = document.querySelector(`.book-card[data-book*='"id": ${currentBookId}']`) ||
+                     document.querySelector(`.book-card[data-book*='"id":${currentBookId}']`) ||
+                     document.querySelector(`.wishlist-item[data-book*='"id": ${currentBookId}']`) ||
+                     document.querySelector(`.wishlist-item[data-book*='"id":${currentBookId}']`);
+        if (card && card._bookData) {
+          card._bookData.notes = newNotes;
+        }
+      }
+    } catch (err) {
+      console.error('Failed to save notes:', err);
+    }
+    exitNotesEditMode();
+  };
+
+  if (notesEditBtn) {
+    notesEditBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      enterNotesEditMode();
+    });
+  }
+
+  if (notesSaveBtn) {
+    notesSaveBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      saveNotes();
+    });
+  }
+
+  // Save on click outside the notes area
+  if (panel && notesTextarea) {
+    document.addEventListener('click', (e) => {
+      if (!notesTextarea.hidden && 
+          !notesTextarea.contains(e.target) && 
+          !notesSaveBtn.contains(e.target) &&
+          !notesEditBtn.contains(e.target)) {
+        saveNotes();
+      }
+    });
+  }
 
 });

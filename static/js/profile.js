@@ -1,5 +1,11 @@
 // Instagram-style tab switching
 document.addEventListener('DOMContentLoaded', () => {
+  // Set max date to today for all date inputs
+  const today = new Date().toISOString().split('T')[0];
+  document.querySelectorAll('input[type="date"]').forEach(input => {
+    input.setAttribute('max', today);
+  });
+
   // Apply progress bar widths from data attributes (keeps templates free of inline Jinja styles)
   const fills = document.querySelectorAll('.progress-fill[data-pct]');
   fills.forEach((fill) => {
@@ -220,6 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const setImg = (imgEl, src) => {
     if (!imgEl || !src) return;
     imgEl.src = src;
+    imgEl.classList.remove('avatar-placeholder');
   };
 
   if (avatarTile) {
@@ -262,10 +269,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (avatarResetBtn && bgInput) {
     avatarResetBtn.addEventListener('click', () => {
+      // Reset background color
       const defaultBg = (avatarPreview && avatarPreview.getAttribute('data-bg')) || '#e2c9bf';
       bgInput.value = defaultBg;
       applyBg(avatarPreview, defaultBg);
       applyBg(avatarTile, defaultBg);
+      
+      // Reset profile picture to first avatar option
+      if (avatarChoiceRadios.length > 0) {
+        const firstRadio = avatarChoiceRadios[0];
+        firstRadio.checked = true;
+        const label = firstRadio.closest('.avatar-choice');
+        const src = label ? label.getAttribute('data-src') : '';
+        if (src) {
+          setImg(avatarPreviewImg, src);
+          setImg(avatarImg, src);
+        }
+      }
     });
   }
 
@@ -288,5 +308,220 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
-});
 
+  // Library Search and Filters
+  const librarySearchInput = document.getElementById('librarySearchInput');
+  const libraryTab = document.getElementById('libraryTab');
+  const libraryFilterToggle = document.getElementById('libraryFilterToggle');
+  const libraryFilterPanel = document.getElementById('libraryFilterPanel');
+  const libraryGenreFilter = document.getElementById('libraryGenreFilter');
+  const libraryStatusFilter = document.getElementById('libraryStatusFilter');
+  const libraryRatingFilter = document.getElementById('libraryRatingFilter');
+  const libraryApplyFilters = document.getElementById('libraryApplyFilters');
+  const libraryResetFilters = document.getElementById('libraryResetFilters');
+  const libraryNoResults = document.getElementById('libraryNoResults');
+
+  // Custom Dropdown Logic
+  const customDropdowns = document.querySelectorAll('.custom-dropdown');
+  
+  const closeAllDropdowns = (except) => {
+    customDropdowns.forEach(dd => {
+      if (dd !== except) {
+        dd.querySelector('.dropdown-menu')?.classList.remove('show');
+        dd.querySelector('.dropdown-toggle')?.setAttribute('aria-expanded', 'false');
+      }
+    });
+  };
+
+  customDropdowns.forEach(dropdown => {
+    const toggle = dropdown.querySelector('.dropdown-toggle');
+    const menu = dropdown.querySelector('.dropdown-menu');
+    const hiddenInput = dropdown.querySelector('input[type="hidden"]');
+    const textSpan = dropdown.querySelector('.dropdown-text');
+    const items = dropdown.querySelectorAll('.dropdown-item');
+
+    if (!toggle || !menu) return;
+
+    toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = menu.classList.contains('show');
+      closeAllDropdowns(dropdown);
+      if (!isOpen) {
+        menu.classList.add('show');
+        toggle.setAttribute('aria-expanded', 'true');
+      } else {
+        menu.classList.remove('show');
+        toggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    items.forEach(item => {
+      item.addEventListener('click', () => {
+        const value = item.dataset.value;
+        const text = item.textContent;
+        
+        // Update hidden input
+        if (hiddenInput) hiddenInput.value = value;
+        
+        // Update displayed text
+        if (textSpan) textSpan.textContent = text;
+        
+        // Update selected state
+        items.forEach(i => i.classList.remove('selected'));
+        item.classList.add('selected');
+        
+        // Close menu
+        menu.classList.remove('show');
+        toggle.setAttribute('aria-expanded', 'false');
+      });
+    });
+  });
+
+  // Close dropdowns on outside click
+  document.addEventListener('click', () => closeAllDropdowns());
+
+  // Genre hierarchy for filtering
+  const subGenres = {
+    'Fiction': ['Literary fiction', 'Contemporary fiction', 'Short stories', 'Drama', 'Adventure'],
+    'Non-fiction': ['Biography / Memoir', 'Self-help', 'History', 'Science', 'Essays'],
+    'Fantasy': ['High fantasy', 'Urban fantasy', 'Dark fantasy', 'Epic fantasy', 'Mythological fantasy'],
+    'Science Fiction': ['Dystopian', 'Space opera', 'Cyberpunk', 'Time travel', 'Hard science fiction'],
+    'Romance': ['Contemporary romance', 'Historical romance', 'Romantic comedy', 'Paranormal romance', 'Young adult romance'],
+    'Mystery / Crime': ['Detective fiction', 'Cozy mystery', 'Police procedural', 'True crime', 'Noir'],
+    'Thriller / Suspense': ['Psychological thriller', 'Political thriller', 'Legal thriller', 'Spy thriller', 'Action thriller'],
+    'Horror': ['Psychological horror', 'Supernatural horror', 'Gothic horror', 'Monster horror', 'Cosmic horror'],
+    'Historical': ['Historical fiction', 'Historical romance', 'Alternate history', 'War fiction', 'Biographical fiction'],
+    "Children's / Young Adult": ['Picture books', 'Middle grade', 'Young adult fiction', 'Educational', 'Coming-of-age']
+  };
+
+  const matchesGenreFilter = (bookGenre, filterValue) => {
+    if (!filterValue) return true;
+    if (!bookGenre) return false;
+    
+    // Check if book genre contains the main genre
+    if (bookGenre.includes(filterValue)) return true;
+    
+    // Check if book genre matches any subgenre of the selected main genre
+    const subs = subGenres[filterValue] || [];
+    return subs.some(sub => bookGenre.includes(sub));
+  };
+
+  const filterLibraryBooks = () => {
+    if (!libraryTab) return;
+
+    const query = (librarySearchInput?.value || '').toLowerCase().trim();
+    const genreFilter = libraryGenreFilter?.value || '';
+    const statusFilter = libraryStatusFilter?.value || '';
+    const ratingFilter = libraryRatingFilter?.value || '';
+
+    const cards = libraryTab.querySelectorAll('.book-card');
+    const sections = libraryTab.querySelectorAll('.profile-section');
+    let totalVisible = 0;
+
+    cards.forEach((card) => {
+      let title = '';
+      let author = '';
+      let genre = '';
+      let pages = 0;
+      let pagesRead = 0;
+      let rating = 0;
+
+      try {
+        const data = JSON.parse(card.dataset.book || '{}');
+        title = (data.title || '').toLowerCase();
+        author = (data.author || '').toLowerCase();
+        genre = data.genre || '';
+        pages = parseInt(data.pages) || 0;
+        pagesRead = parseInt(data.pages_read) || 0;
+        rating = parseInt(data.rating) || 0;
+      } catch (e) {
+        // ignore parse errors
+      }
+
+      // Check text search
+      const matchesSearch = !query || title.includes(query) || author.includes(query);
+
+      // Check genre filter (match main genre or any of its subgenres)
+      const matchesGenre = matchesGenreFilter(genre, genreFilter);
+
+      // Check status filter based on pages read
+      // "reading" = pages_read < pages (still reading)
+      // "read" = pages_read >= pages (finished the book)
+      let matchesStatus = true;
+      if (statusFilter === 'reading') {
+        matchesStatus = pages > 0 && pagesRead < pages;
+      } else if (statusFilter === 'read') {
+        matchesStatus = pages > 0 && pagesRead >= pages;
+      }
+
+      // Check rating filter
+      let matchesRating = true;
+      if (ratingFilter) {
+        const minRating = parseInt(ratingFilter);
+        matchesRating = rating >= minRating;
+      }
+
+      const isVisible = matchesSearch && matchesGenre && matchesStatus && matchesRating;
+      card.style.display = isVisible ? '' : 'none';
+
+      if (isVisible) totalVisible++;
+    });
+
+    // Show/hide sections based on visible cards
+    sections.forEach((section) => {
+      const visibleCards = section.querySelectorAll('.book-card:not([style*="display: none"])');
+      section.style.display = visibleCards.length > 0 ? '' : 'none';
+    });
+
+    // Show no results state
+    if (libraryNoResults) {
+      const hasFiltersOrSearch = query || genreFilter || statusFilter || ratingFilter;
+      libraryNoResults.hidden = totalVisible > 0 || !hasFiltersOrSearch;
+    }
+  };
+
+  // Filter toggle
+  if (libraryFilterToggle && libraryFilterPanel) {
+    libraryFilterToggle.addEventListener('click', () => {
+      const isHidden = libraryFilterPanel.hidden;
+      libraryFilterPanel.hidden = !isHidden;
+      libraryFilterToggle.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+    });
+  }
+
+  // Apply filters button
+  if (libraryApplyFilters) {
+    libraryApplyFilters.addEventListener('click', filterLibraryBooks);
+  }
+
+  // Reset filters
+  if (libraryResetFilters) {
+    libraryResetFilters.addEventListener('click', () => {
+      if (librarySearchInput) librarySearchInput.value = '';
+      if (libraryGenreFilter) libraryGenreFilter.value = '';
+      if (libraryStatusFilter) libraryStatusFilter.value = '';
+      if (libraryRatingFilter) libraryRatingFilter.value = '';
+      
+      // Reset custom dropdown UI
+      customDropdowns.forEach(dropdown => {
+        const hiddenInput = dropdown.querySelector('input[type="hidden"]');
+        const textSpan = dropdown.querySelector('.dropdown-text');
+        const items = dropdown.querySelectorAll('.dropdown-item');
+        const firstItem = items[0];
+        
+        if (hiddenInput) hiddenInput.value = '';
+        if (textSpan && firstItem) textSpan.textContent = firstItem.textContent;
+        items.forEach((item, i) => {
+          item.classList.toggle('selected', i === 0);
+        });
+      });
+      
+      filterLibraryBooks();
+    });
+  }
+
+  // Search on input
+  if (librarySearchInput) {
+    librarySearchInput.addEventListener('input', filterLibraryBooks);
+  }
+});

@@ -88,8 +88,45 @@ def create():
             # Dates
             start_date_str = request.form.get('start_date')
             finish_date_str = request.form.get('finish_date')
-            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date() if start_date_str else None
-            finish_date = datetime.strptime(finish_date_str, '%Y-%m-%d').date() if finish_date_str else None
+            start_date = None
+            finish_date = None
+            today = datetime.utcnow().date()
+            min_date = datetime(1900, 1, 1).date()
+            
+            # Parse and validate start date
+            if start_date_str:
+                try:
+                    start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+                except ValueError:
+                    flash('Invalid start date. Please use a valid date.', 'error')
+                    return render_template('create.html', cover_designs=cover_designs, prefill_book=prefill_book)
+                
+                if start_date > today:
+                    flash('Start date cannot be in the future.', 'error')
+                    return render_template('create.html', cover_designs=cover_designs, prefill_book=prefill_book)
+                if start_date < min_date:
+                    flash('Start date cannot be before 1900.', 'error')
+                    return render_template('create.html', cover_designs=cover_designs, prefill_book=prefill_book)
+            
+            # Parse and validate finish date
+            if finish_date_str:
+                try:
+                    finish_date = datetime.strptime(finish_date_str, '%Y-%m-%d').date()
+                except ValueError:
+                    flash('Invalid finish date. Please use a valid date.', 'error')
+                    return render_template('create.html', cover_designs=cover_designs, prefill_book=prefill_book)
+                
+                if finish_date > today:
+                    flash('Finish date cannot be in the future.', 'error')
+                    return render_template('create.html', cover_designs=cover_designs, prefill_book=prefill_book)
+                if finish_date < min_date:
+                    flash('Finish date cannot be before 1900.', 'error')
+                    return render_template('create.html', cover_designs=cover_designs, prefill_book=prefill_book)
+            
+            # Validate finish date is after start date
+            if start_date and finish_date and finish_date < start_date:
+                flash('Finish date must be on or after the start date.', 'error')
+                return render_template('create.html', cover_designs=cover_designs, prefill_book=prefill_book)
 
             # Simple validation
             if not cover:
@@ -97,22 +134,30 @@ def create():
                 return render_template('create.html', cover_designs=cover_designs, prefill_book=prefill_book)
 
             if cover == '__custom__':
+                # Check if reusing existing custom cover from prefill
+                existing_custom = request.form.get('existing_custom_cover')
                 uploaded = request.files.get('custom_cover')
-                if not uploaded or not uploaded.filename:
+                
+                if existing_custom and (not uploaded or not uploaded.filename):
+                    # Reuse the existing custom cover from wishlist
+                    cover = existing_custom
+                elif not uploaded or not uploaded.filename:
                     flash('Please upload a cover image.', 'error')
                     return render_template('create.html', cover_designs=cover_designs, prefill_book=prefill_book)
-                if not allowed_file(uploaded.filename):
-                    flash('Invalid file type. Please upload a PNG, JPG, JPEG, or GIF.', 'error')
-                    return render_template('create.html', cover_designs=cover_designs, prefill_book=prefill_book)
+                else:
+                    # New custom cover uploaded
+                    if not allowed_file(uploaded.filename):
+                        flash('Invalid file type. Please upload a PNG, JPG, JPEG, or GIF.', 'error')
+                        return render_template('create.html', cover_designs=cover_designs, prefill_book=prefill_book)
 
-                original_name = secure_filename(uploaded.filename)
-                ext = os.path.splitext(original_name)[1].lower()
-                unique_name = f"cover_{current_user.id}_{uuid4().hex}{ext}"
-                save_path = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'], unique_name)
-                uploaded.save(save_path)
+                    original_name = secure_filename(uploaded.filename)
+                    ext = os.path.splitext(original_name)[1].lower()
+                    unique_name = f"cover_{current_user.id}_{uuid4().hex}{ext}"
+                    save_path = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'], unique_name)
+                    uploaded.save(save_path)
 
-                # Store path relative to /static
-                cover = f"uploads/{unique_name}"
+                    # Store path relative to /static
+                    cover = f"uploads/{unique_name}"
 
             if status == 'Reading Now' and not start_date:
                 flash('Please pick a start date.', 'error')
@@ -343,11 +388,26 @@ def update_progress(book_id):
 
     pages_read = max(0, min(pages_read, book.pages or pages_read))
     finish_date = None
+    today = datetime.utcnow().date()
+    min_date = datetime(1900, 1, 1).date()
+    
     if finish_date_str:
         try:
             finish_date = datetime.strptime(finish_date_str, '%Y-%m-%d').date()
         except ValueError:
-            flash('Finish date must be in YYYY-MM-DD format.', 'error')
+            flash('Invalid finish date. Please use a valid date.', 'error')
+            return redirect(url_for('profile'))
+        
+        if finish_date > today:
+            flash('Finish date cannot be in the future.', 'error')
+            return redirect(url_for('profile'))
+        if finish_date < min_date:
+            flash('Finish date cannot be before 1900.', 'error')
+            return redirect(url_for('profile'))
+        
+        # Check finish date is not before book's start date
+        if book.start_date and finish_date < book.start_date:
+            flash('Finish date must be on or after the start date.', 'error')
             return redirect(url_for('profile'))
 
     book.notes = notes.strip() if notes is not None else book.notes
@@ -390,6 +450,26 @@ def update_progress(book_id):
         flash(f'Could not update progress: {exc}', 'error')
 
     return redirect(url_for('profile'))
+
+
+@app.route('/book/<int:book_id>/notes', methods=['POST'])
+@login_required
+def update_notes(book_id):
+    """Update notes for a book via AJAX."""
+    book = Book.query.get_or_404(book_id)
+    if book.user_id != current_user.id:
+        return jsonify({'success': False, 'error': 'Not authorized'}), 403
+    
+    notes = request.form.get('notes', '').strip()
+    book.notes = notes
+    
+    try:
+        db.session.commit()
+        return jsonify({'success': True, 'notes': notes})
+    except Exception as exc:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(exc)}), 500
+
 
 @app.route('/edit/<int:book_id>', methods=['GET', 'POST'])
 @login_required
@@ -488,75 +568,67 @@ def reading():
     books = Book.query.filter_by(status='Reading Now', user_id=current_user.id).all()
     return render_template('reading.html', books=books)
 
-@app.route('/want_to_read', methods=['GET', 'POST'])
+@app.route('/wishlist/add', methods=['POST'])
 @login_required
-def want_to_read():
-    # Wishlist is embedded in the Profile page. Keep this endpoint only for compatibility:
-    # - GET redirects to Profile (Wishlist tab)
-    # - POST still creates wishlist entries then redirects back to Profile
-    books = Book.query.filter_by(status='Want to Read', user_id=current_user.id).order_by(Book.title.asc()).all()
+def add_to_wishlist():
+    """Add a book to the wishlist."""
+    title = request.form.get('title', '').strip()
+    author = request.form.get('author', '').strip()
+    genre = request.form.get('genre', '').strip() or 'Unknown'
+    pages_raw = request.form.get('pages', '0').strip()
+    notes = request.form.get('notes', '').strip()
+    retailer_link = request.form.get('retailer_link', '').strip() or None
+    cover = request.form.get('cover') or 'img/book0.png'
 
-    if request.method == 'GET':
+    if not title or not author:
+        flash('Title and Author are required.', 'error')
         return redirect(url_for('profile', tab='wishlist'))
 
-    if request.method == 'POST':
-        title = request.form.get('title', '').strip()
-        author = request.form.get('author', '').strip()
-        genre = request.form.get('genre', '').strip() or 'Unknown'
-        pages_raw = request.form.get('pages', '0').strip()
-        notes = request.form.get('notes', '').strip()
-        retailer_link = request.form.get('retailer_link', '').strip() or None
-        cover = request.form.get('cover') or 'img/book0.png'
+    try:
+        pages = int(pages_raw) if pages_raw else 0
+    except ValueError:
+        pages = 0
 
-        if not title or not author:
-            flash('Title and Author are required.', 'error')
+    pages = max(0, pages)
+
+    if cover == '__custom__':
+        uploaded = request.files.get('custom_cover')
+        if not uploaded or not uploaded.filename:
+            flash('Please upload a cover image.', 'error')
+            return redirect(url_for('profile', tab='wishlist'))
+        if not allowed_file(uploaded.filename):
+            flash('Invalid file type. Please upload a PNG, JPG, JPEG, or GIF.', 'error')
             return redirect(url_for('profile', tab='wishlist'))
 
-        try:
-            pages = int(pages_raw) if pages_raw else 0
-        except ValueError:
-            pages = 0
+        original_name = secure_filename(uploaded.filename)
+        ext = os.path.splitext(original_name)[1].lower()
+        unique_name = f"cover_{current_user.id}_{uuid4().hex}{ext}"
+        save_path = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'], unique_name)
+        uploaded.save(save_path)
+        cover = f"uploads/{unique_name}"
 
-        pages = max(0, pages)
+    new_book = Book(
+        user_id=current_user.id,
+        title=title,
+        author=author,
+        genre=genre,
+        pages=pages,
+        cover=cover,
+        status='Want to Read',
+        notes=notes,
+        pages_read=0,
+        retailer_link=retailer_link
+    )
 
-        if cover == '__custom__':
-            uploaded = request.files.get('custom_cover')
-            if not uploaded or not uploaded.filename:
-                flash('Please upload a cover image.', 'error')
-                return redirect(url_for('profile', tab='wishlist'))
-            if not allowed_file(uploaded.filename):
-                flash('Invalid file type. Please upload a PNG, JPG, JPEG, or GIF.', 'error')
-                return redirect(url_for('profile', tab='wishlist'))
-
-            original_name = secure_filename(uploaded.filename)
-            ext = os.path.splitext(original_name)[1].lower()
-            unique_name = f"cover_{current_user.id}_{uuid4().hex}{ext}"
-            save_path = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'], unique_name)
-            uploaded.save(save_path)
-            cover = f"uploads/{unique_name}"
-
-        new_book = Book(
-            user_id=current_user.id,
-            title=title,
-            author=author,
-            genre=genre,
-            pages=pages,
-            cover=cover,
-            status='Want to Read',
-            notes=notes,
-            pages_read=0,
-            retailer_link=retailer_link
-        )
-
-        try:
-            db.session.add(new_book)
-            db.session.commit()
-            flash('Book saved to Want to Read.', 'success')
-            return redirect(url_for('profile', tab='wishlist'))
-        except Exception as exc:
-            db.session.rollback()
-            flash(f'Could not save book: {exc}', 'error')
-            return redirect(url_for('profile', tab='wishlist'))
+    try:
+        db.session.add(new_book)
+        db.session.commit()
+        flash('Book added to wishlist!', 'success')
+    except Exception as exc:
+        db.session.rollback()
+        flash(f'Could not save book: {exc}', 'error')
+    
+    return redirect(url_for('profile', tab='wishlist'))
 
 @app.route('/finished')
 @login_required
@@ -630,15 +702,25 @@ def profile_avatar():
     selected_pfp = (request.form.get('pfp') or '').strip()
     bg_color = (request.form.get('pfp_bg') or '').strip()
 
+    def is_completed(status):
+        return (status or '').lower() in {'already read', 'finished'}
+
+    def effective_pages_read(book: Book) -> int:
+        pages_total = int(book.pages or 0)
+        pages_read = int(book.pages_read or 0)
+        if pages_total > 0:
+            pages_read = max(0, min(pages_read, pages_total))
+            if is_completed(book.status) and pages_read == 0:
+                return pages_total
+        return max(0, pages_read)
+
     # Recompute unlock state server-side to prevent selecting locked avatars
     all_books = Book.query.filter(
         Book.user_id == current_user.id,
         Book.status != 'Want to Read'
     ).all()
-    total_books_read = len([b for b in all_books if (b.status or '').lower() in {'already read', 'finished'}])
-    total_pages_read = db.session.query(db.func.sum(PageLog.pages)).filter(PageLog.user_id == current_user.id).scalar() or 0
-    if not total_pages_read:
-        total_pages_read = sum(max(0, int(b.pages_read or 0)) for b in all_books)
+    total_books_read = len([b for b in all_books if is_completed(b.status)])
+    total_pages_read = sum(effective_pages_read(book) for book in all_books)
 
     pfp_options = get_avatar_pfp_options(int(total_books_read), int(total_pages_read))
     allowed_pfps = {opt['path'] for opt in pfp_options}

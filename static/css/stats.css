@@ -152,10 +152,12 @@
     padding: 1.5rem 2rem;
     margin-bottom: 1.5rem;
     box-shadow: 0 4px 14px rgba(107, 76, 65, 0.08);
+    position: relative;
+    padding-right: 180px;
 }
 
 .monthly-section h3 {
-    margin: 0 0 1rem;
+    margin: 0 0 0.5rem;
     font-size: 1rem;
     color: var(--muted);
     text-transform: uppercase;
@@ -167,6 +169,18 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+}
+
+.monthly-section .section-decor {
+    position: absolute;
+    right: 1rem;
+    top: 7px;
+    bottom: 15px;
+    width: auto;
+    height: calc(100% - 25px);
+    object-fit: contain;
+    object-position: bottom right;
+    transform: scaleX(-1);
 }
 
 .monthly-section .big-number {
@@ -450,6 +464,26 @@
     gap: 0.4rem;
 }
 
+.chart-monthly .bar-item {
+    display: grid;
+    grid-template-rows: var(--plot-height) auto;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--muted);
+    min-width: 0;
+    cursor: pointer;
+    position: relative;
+}
+
+.chart-monthly .bar-item:hover .bar {
+    opacity: 0.7;
+}
+
+.chart-monthly .bar-item.is-selected .bar {
+    opacity: 1;
+    box-shadow: 0 0 0 2px var(--accent);
+}
+
 .bar-item {
     display: grid;
     grid-template-rows: var(--plot-height) auto auto;
@@ -487,19 +521,6 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     text-align: center;
-}
-
-.bar-pages {
-    font-size: 1rem;
-    color: var(--fg);
-    font-weight: 600;
-    line-height: 0.95;
-    text-align: center;
-    min-height: 1.4rem;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 .chart-note {
@@ -672,14 +693,6 @@
         font-size: 0.7rem;
     }
 
-    .chart-monthly .bar-pages {
-        display: none;
-    }
-
-    .chart-monthly .bar-item {
-        grid-template-rows: var(--plot-height) auto;
-    }
-
     .chart-yaxis {
         font-size: 0.7rem;
     }
@@ -729,10 +742,6 @@
         font-size: 0.85rem;
     }
 
-    .bar-pages {
-        font-size: 0.8rem;
-    }
-
     .chart-yaxis {
         font-size: 0.85rem;
     }
@@ -764,11 +773,6 @@
 
     .bar-label {
         font-size: 0.95rem;
-    }
-
-    .bar-pages {
-        font-size: 0.95rem;
-        min-height: 1.55rem;
     }
 
     .chart-note {
@@ -812,11 +816,6 @@
 
     .bar-label {
         font-size: 1.05rem;
-    }
-
-    .bar-pages {
-        font-size: 1.1rem;
-        min-height: 1.6rem;
     }
 
     .chart-note {

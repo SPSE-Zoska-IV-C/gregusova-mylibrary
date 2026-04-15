@@ -14,14 +14,7 @@
     <header class="profile-header">
         <div class="profile-avatar">
             <div class="avatar-tile" id="avatarTile" data-bg="{{ user.profile_bg_color or '#e2c9bf' }}">
-                {% if user.profile_picture %}
-                    <img id="avatarImg" src="{{ url_for('static', filename=user.profile_picture) }}" alt="Profile picture">
-                {% else %}
-                    <svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="12" cy="7" r="4"></circle>
-                    </svg>
-                {% endif %}
+                <img id="avatarImg" src="{{ url_for('static', filename=user.profile_picture) if user.profile_picture else url_for('static', filename='img/pfp/pfp1.png') }}" alt="Profile picture" {% if not user.profile_picture %}class="avatar-placeholder"{% endif %}>
             </div>
 
             <button type="button" class="avatar-edit-btn" id="avatarEditBtn" aria-label="Edit profile picture">
@@ -68,6 +61,89 @@
 
     <!-- Library Tab Content -->
     <div class="tab-content active" id="libraryTab">
+        <!-- Search Bar -->
+        <form class="library-search" role="search" onsubmit="return false;">
+            <label class="sr-only" for="librarySearchInput">Search your library</label>
+            <div class="search-controls">
+                <div class="search-field">
+                    <img src="{{ url_for('static', filename='img/icons/search.svg') }}" alt="" aria-hidden="true">
+                    <input type="search" id="librarySearchInput" placeholder="Search by title or author" autocomplete="off">
+                </div>
+                <button type="button" class="filter-toggle" id="libraryFilterToggle" aria-expanded="false" aria-controls="libraryFilterPanel">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                    </svg>
+                    <span>Filters</span>
+                </button>
+            </div>
+            <div class="filter-panel" id="libraryFilterPanel" hidden>
+                <div class="filter-section">
+                    <label>Genre</label>
+                    <div class="custom-dropdown" data-filter="genre">
+                        <button type="button" class="dropdown-toggle" aria-expanded="false">
+                            <span class="dropdown-text">All genres</span>
+                            <svg class="dropdown-arrow" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
+                        <ul class="dropdown-menu" role="listbox">
+                            <li class="dropdown-item selected" data-value="" role="option">All genres</li>
+                            <li class="dropdown-item" data-value="Fiction" role="option">Fiction</li>
+                            <li class="dropdown-item" data-value="Non-fiction" role="option">Non-fiction</li>
+                            <li class="dropdown-item" data-value="Fantasy" role="option">Fantasy</li>
+                            <li class="dropdown-item" data-value="Science Fiction" role="option">Science Fiction</li>
+                            <li class="dropdown-item" data-value="Romance" role="option">Romance</li>
+                            <li class="dropdown-item" data-value="Mystery / Crime" role="option">Mystery / Crime</li>
+                            <li class="dropdown-item" data-value="Thriller / Suspense" role="option">Thriller / Suspense</li>
+                            <li class="dropdown-item" data-value="Horror" role="option">Horror</li>
+                            <li class="dropdown-item" data-value="Historical" role="option">Historical</li>
+                            <li class="dropdown-item" data-value="Children's / Young Adult" role="option">Children's / Young Adult</li>
+                        </ul>
+                        <input type="hidden" id="libraryGenreFilter" value="">
+                    </div>
+                </div>
+                <div class="filter-section">
+                    <label>Status</label>
+                    <div class="custom-dropdown" data-filter="status">
+                        <button type="button" class="dropdown-toggle" aria-expanded="false">
+                            <span class="dropdown-text">All statuses</span>
+                            <svg class="dropdown-arrow" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
+                        <ul class="dropdown-menu" role="listbox">
+                            <li class="dropdown-item selected" data-value="" role="option">All statuses</li>
+                            <li class="dropdown-item" data-value="reading" role="option">Reading Now</li>
+                            <li class="dropdown-item" data-value="read" role="option">Already Read</li>
+                        </ul>
+                        <input type="hidden" id="libraryStatusFilter" value="">
+                    </div>
+                </div>
+                <div class="filter-section">
+                    <label>Rating</label>
+                    <div class="custom-dropdown" data-filter="rating">
+                        <button type="button" class="dropdown-toggle" aria-expanded="false">
+                            <span class="dropdown-text">Any rating</span>
+                            <svg class="dropdown-arrow" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        </button>
+                        <ul class="dropdown-menu" role="listbox">
+                            <li class="dropdown-item selected" data-value="" role="option">Any rating</li>
+                            <li class="dropdown-item" data-value="5" role="option">5 stars</li>
+                            <li class="dropdown-item" data-value="4" role="option">4+ stars</li>
+                            <li class="dropdown-item" data-value="3" role="option">3+ stars</li>
+                        </ul>
+                        <input type="hidden" id="libraryRatingFilter" value="">
+                    </div>
+                </div>
+                <div class="filter-actions">
+                    <button type="button" class="filter-apply" id="libraryApplyFilters">Apply filters</button>
+                    <button type="button" class="filter-reset" id="libraryResetFilters">Reset</button>
+                </div>
+            </div>
+        </form>
+
+        <!-- No Results State -->
+        <div class="library-no-results" id="libraryNoResults" hidden>
+            <img src="{{ url_for('static', filename='img/decor/bazmek3.png') }}" alt="" class="library-no-results-img" aria-hidden="true">
+            <p class="library-no-results-text">No books found matching your search or filters.</p>
+        </div>
+
         <!-- Currently Reading Section -->
         <section class="profile-section">
             <div class="section-header">
@@ -184,14 +260,7 @@
         <form class="avatar-editor" id="avatarEditorForm" method="POST" action="{{ url_for('profile_avatar') }}">
             <div class="avatar-editor-left">
                 <div class="avatar-preview" id="avatarPreview" data-bg="{{ user.profile_bg_color or '#e2c9bf' }}">
-                    {% if user.profile_picture %}
-                        <img id="avatarPreviewImg" src="{{ url_for('static', filename=user.profile_picture) }}" alt="Avatar preview">
-                    {% else %}
-                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="12" cy="7" r="4"></circle>
-                        </svg>
-                    {% endif %}
+                    <img id="avatarPreviewImg" src="{{ url_for('static', filename=user.profile_picture) if user.profile_picture else url_for('static', filename='img/pfp/pfp1.png') }}" alt="Avatar preview" {% if not user.profile_picture %}class="avatar-placeholder"{% endif %}>
                 </div>
 
                 <div class="avatar-bg-row">
@@ -274,6 +343,13 @@
 			<div class="panel-notes">
 				<h4>Notes</h4>
 				<p id="panelNotes">No notes yet.</p>
+				<textarea id="panelNotesEdit" class="panel-notes-textarea" placeholder="Add your thoughts..." hidden></textarea>
+				<button type="button" class="notes-edit-btn" id="notesEditBtn" title="Edit notes">
+					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+				</button>
+				<button type="button" class="notes-save-btn" id="notesSaveBtn" title="Save notes" hidden>
+					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+				</button>
 			</div>
 			<div class="panel-quick-actions">
 				<div class="panel-action-group">
@@ -310,7 +386,7 @@
                 <div class="completion-controls" id="completionControls" hidden>
                     <div class="finish-date-field">
                         <label for="finishDateInput">Finish date</label>
-                        <input type="date" id="finishDateInput" name="finish_date">
+                        <input type="date" id="finishDateInput" name="finish_date" min="1900-01-01">
                     </div>
                     <div class="completion-rating">
                         <span>Add a rating</span>
@@ -325,8 +401,6 @@
                     </div>
                 </div>
                 <input type="hidden" name="mark_finished" id="markFinished" value="false">
-				<label for="progressNotes">Notes</label>
-				<textarea id="progressNotes" name="notes" rows="4" placeholder="Add your thoughts, quotes, or reflections..."></textarea>
 				<div class="panel-actions">
 					<button type="submit" class="cta">Save progress</button>
 				</div>

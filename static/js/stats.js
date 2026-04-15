@@ -118,26 +118,35 @@
     updateChartFrame(monthlyChart);
   }
 
-  // Daily chart bar click tooltip
+  // Chart bar click tooltip (works for both daily and monthly)
   const chartTooltip = document.getElementById('chartTooltip');
-  const tooltipPages = chartTooltip?.querySelector('.tooltip-pages');
-  const tooltipDate = chartTooltip?.querySelector('.tooltip-date');
+  const monthlyTooltip = document.getElementById('monthlyTooltip');
   let selectedBar = null;
+  let activeTooltip = null;
 
-  function showTooltip(barItem) {
-    if (!chartTooltip || !tooltipPages || !tooltipDate) return;
+  function showTooltip(barItem, isMonthly = false) {
+    const tooltip = isMonthly ? monthlyTooltip : chartTooltip;
+    if (!tooltip) return;
+    const tooltipPages = tooltip.querySelector('.tooltip-pages');
+    const tooltipDate = tooltip.querySelector('.tooltip-date');
+    if (!tooltipPages || !tooltipDate) return;
     
     const pages = barItem.dataset.pages || '0';
-    const day = barItem.dataset.day || '';
-    const monthLabel = barItem.dataset.date || '';
     
-    // Parse month label to get month name and year
-    const parts = monthLabel.split(' ');
-    const monthName = parts[0] || '';
-    const year = parts[1] || '';
-    
-    tooltipPages.textContent = `${pages} pages`;
-    tooltipDate.textContent = `${day} ${monthName} ${year}`;
+    if (isMonthly) {
+      const month = barItem.dataset.month || '';
+      const year = barItem.dataset.year || '';
+      tooltipPages.textContent = `${pages} pages`;
+      tooltipDate.textContent = `${month} ${year}`;
+    } else {
+      const day = barItem.dataset.day || '';
+      const monthLabel = barItem.dataset.date || '';
+      const parts = monthLabel.split(' ');
+      const monthName = parts[0] || '';
+      const year = parts[1] || '';
+      tooltipPages.textContent = `${pages} pages`;
+      tooltipDate.textContent = `${day} ${monthName} ${year}`;
+    }
     
     // Position tooltip above the bar
     const barRect = barItem.getBoundingClientRect();
@@ -147,36 +156,53 @@
     const left = barRect.left + barRect.width / 2 - frameRect.left;
     const top = barRect.top - frameRect.top;
     
-    chartTooltip.style.left = `${left}px`;
-    chartTooltip.style.top = `${top}px`;
-    chartTooltip.hidden = false;
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
+    tooltip.hidden = false;
     
     // Mark bar as selected
     if (selectedBar) selectedBar.classList.remove('is-selected');
     barItem.classList.add('is-selected');
     selectedBar = barItem;
+    activeTooltip = tooltip;
   }
 
   function hideTooltip() {
+    if (activeTooltip) activeTooltip.hidden = true;
     if (chartTooltip) chartTooltip.hidden = true;
+    if (monthlyTooltip) monthlyTooltip.hidden = true;
     if (selectedBar) {
       selectedBar.classList.remove('is-selected');
       selectedBar = null;
     }
+    activeTooltip = null;
   }
 
-  // Event delegation for daily chart bars
+  // Event delegation for chart bars (both daily and monthly)
   document.addEventListener('click', (e) => {
-    const barItem = e.target.closest('.chart-daily .bar-item');
-    if (barItem) {
+    const dailyBarItem = e.target.closest('.chart-daily .bar-item');
+    const monthlyBarItem = e.target.closest('.chart-monthly .bar-item');
+    
+    if (dailyBarItem) {
       e.stopPropagation();
-      if (selectedBar === barItem) {
+      if (selectedBar === dailyBarItem) {
         hideTooltip();
       } else {
-        showTooltip(barItem);
+        showTooltip(dailyBarItem, false);
       }
       return;
     }
+    
+    if (monthlyBarItem) {
+      e.stopPropagation();
+      if (selectedBar === monthlyBarItem) {
+        hideTooltip();
+      } else {
+        showTooltip(monthlyBarItem, true);
+      }
+      return;
+    }
+    
     // Click outside hides tooltip
     if (!e.target.closest('.chart-tooltip')) {
       hideTooltip();
@@ -194,7 +220,7 @@
     }
   }
 
-  function updateBars(container, series, kind, monthLabel) {
+  function updateBars(container, series, kind, monthLabel, chartYear) {
     // kind: 'daily' or 'monthly'
     const chart = container.querySelector(kind === 'daily' ? '.chart-daily' : '.chart-monthly');
     if (!chart) return;
@@ -215,11 +241,12 @@
       series.forEach(item => {
         const wrap = document.createElement('div');
         wrap.className = 'bar-item';
-        wrap.title = `${item.label}: ${item.pages} pages`;
+        wrap.dataset.pages = item.pages;
+        wrap.dataset.month = item.label;
+        wrap.dataset.year = chartYear || '';
         wrap.innerHTML = `
           <div class="bar-wrap"><div class="bar" data-pct="${item.pct}"></div></div>
           <div class="bar-label">${item.label}</div>
-          <div class="bar-pages">${item.pages}</div>
         `;
         chart.appendChild(wrap);
       });
@@ -261,10 +288,10 @@
       if (!res.ok) return;
       const data = await res.json();
       if (isDaily) {
-        updateBars(container, data.daily, 'daily', data.month_label);
+        updateBars(container, data.daily, 'daily', data.month_label, null);
         updateNav(container, data, 'daily');
       } else {
-        updateBars(container, data.monthly, 'monthly', null);
+        updateBars(container, data.monthly, 'monthly', null, data.chart_year);
         updateNav(container, data, 'monthly');
       }
       updateChartFrame(container);

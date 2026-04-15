@@ -22,13 +22,17 @@
         </div>
     </header>
 
-    <form class="mylist-search" role="search" method="get" action="{{ url_for('mylist') }}">
+    <form class="mylist-search{% if filters.q %} is-expanded{% endif %}" role="search" method="get" action="{{ url_for('mylist') }}" id="searchForm">
         <label class="sr-only" for="bookSearch">Search within your list</label>
         <div class="search-controls">
-            <div class="search-field">
-                <img src="{{ url_for('static', filename='img/icons/search.svg') }}" alt="" aria-hidden="true">
-                <input type="search" id="bookSearch" name="q" value="{{ filters.q }}" placeholder="Search by title or author" autocomplete="off">
-                <button type="submit" class="search-submit">Search</button>
+            <button type="button" class="search-toggle" id="searchToggle" aria-label="Toggle search">
+                <img src="{{ url_for('static', filename='img/icons/search.svg') }}" alt="" aria-hidden="true" class="search-toggle-icon">
+            </button>
+            <div class="search-field-wrapper">
+                <div class="search-field">
+                    <input type="search" id="bookSearch" name="q" value="{{ filters.q }}" placeholder="Search by title or author" autocomplete="off">
+                    <button type="submit" class="search-submit">Search</button>
+                </div>
             </div>
             <button type="button" class="filter-toggle" id="filterToggle">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -190,6 +194,13 @@
 			<div class="panel-notes">
 				<h4>Notes</h4>
 				<p id="panelNotes">No notes yet.</p>
+				<textarea id="panelNotesEdit" class="panel-notes-textarea" placeholder="Add your thoughts..." hidden></textarea>
+				<button type="button" class="notes-edit-btn" id="notesEditBtn" title="Edit notes">
+					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+				</button>
+				<button type="button" class="notes-save-btn" id="notesSaveBtn" title="Save notes" hidden>
+					<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+				</button>
 			</div>
 			<div class="panel-quick-actions">
 				<div class="panel-action-group">
@@ -226,7 +237,7 @@
                 <div class="completion-controls" id="completionControls" hidden>
                     <div class="finish-date-field">
                         <label for="finishDateInput">Finish date</label>
-                        <input type="date" id="finishDateInput" name="finish_date">
+                        <input type="date" id="finishDateInput" name="finish_date" min="1900-01-01">
                     </div>
                     <div class="completion-rating">
                         <span>Add a rating</span>
@@ -241,8 +252,6 @@
                     </div>
                 </div>
                 <input type="hidden" name="mark_finished" id="markFinished" value="false">
-				<label for="progressNotes">Notes</label>
-				<textarea id="progressNotes" name="notes" rows="3" placeholder="Add your thoughts..."></textarea>
 				<div class="panel-actions">
 					<button type="submit" class="cta">Save progress</button>
 				</div>
