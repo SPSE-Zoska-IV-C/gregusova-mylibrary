@@ -26,7 +26,9 @@ prehľad štatistík. Postavené na Flasku a SQLite, s čistým HTML/CSS a
 - HTML5, CSS3, JavaScript (bez frameworkov)
 - Grafika: vlastné ikony (ArtRage)
 
-## Rýchly štart (Windows)
+
+Poznámka pre uživateľa: pri vytváraní účtu a prihlasovaní sa zadáva email, ten však slúži iba ako unikátny identifikátor
+
 1. Vytvorte a aktivujte virtuálne prostredie:
    
 	 ```powershell
