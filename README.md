@@ -27,7 +27,6 @@ prehľad štatistík. Postavené na Flasku a SQLite, s čistým HTML/CSS a
 - Grafika: vlastné ikony (ArtRage)
 
 
-Poznámka pre uživateľa: pri vytváraní účtu a prihlasovaní sa zadáva email, ten však slúži iba ako unikátny identifikátor
 
 1. Vytvorte a aktivujte virtuálne prostredie:
    
@@ -82,3 +81,4 @@ Poznámka pre uživateľa: pri vytváraní účtu a prihlasovaní sa zadáva ema
 - Odporúčané: `Flask-Talisman` pre bezpečnostné hlavičky, `Flask-Limiter`
 	pre rate limiting, `Sentry` pre chybové reporty.
 
+Poznámka pre uživateľa: pri vytváraní účtu a prihlasovaní sa zadáva email, ten však slúži iba ako unikátny identifikátor
