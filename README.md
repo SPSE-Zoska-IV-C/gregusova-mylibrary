@@ -46,6 +46,8 @@ prehľad štatistík. Postavené na Flasku a SQLite, s čistým HTML/CSS a
 	 python main.py
 	 # alebo
 	 flask --app main run --debug
+  	ak nefungujú, skúste:
+  	 python-m flask --app main run --debug
 	 ```
 
 4. Otvorte http://localhost:5000 a prihláste sa/registrujte.
@@ -70,7 +72,7 @@ prehľad štatistík. Postavené na Flasku a SQLite, s čistým HTML/CSS a
 	stats, want_to_read, …).
 - `static/`: CSS, JS a grafické súbory (obálky, ikony, pfp, uploads).
 - `wsgi.py`: vstup pre produkčné nasadenie (WSGI server).
-- `requirements.txt`: závislosti Pythonu.
+- `requirements.txt`: potrebne knižnice Pythonu.
 
 ## Nasadenie (prehľad)
 - Produkčný WSGI server: napr. Waitress (Windows) alebo Gunicorn (Linux).
@@ -78,6 +80,3 @@ prehľad štatistík. Postavené na Flasku a SQLite, s čistým HTML/CSS a
 - Odporúčané: `Flask-Talisman` pre bezpečnostné hlavičky, `Flask-Limiter`
 	pre rate limiting, `Sentry` pre chybové reporty.
 
-## Licencia
-Projekt slúži na školské účely. Pridajte licenciu podľa potreby (napr.
-MIT), ak plánujete verejné použitie.
