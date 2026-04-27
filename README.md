@@ -47,7 +47,7 @@ prehľad štatistík. Postavené na Flasku a SQLite, s čistým HTML/CSS a
 	 python main.py
 	 # alebo
 	 flask --app main run --debug
-  	ak nefungujú, skúste:
+  	# ak nefungujú, skúste:
   	 python-m flask --app main run --debug
 	 ```
 
@@ -65,6 +65,8 @@ prehľad štatistík. Postavené na Flasku a SQLite, s čistým HTML/CSS a
 - Databáza: `sqlite:///bookapp.db` (lokálny súbor). Úpravy schémy sú
 	ošetrené pomocnými kontrolami stĺpcov pri štarte.
 
+Poznámka: E-mailová adresa zadaná pri registrácii slúži výhradne ako unikátny identifikátor používateľa v systéme a nie je využívaná na marketingové účely ani rozosielanie správ.
+
 ## Štruktúra projektu
 - `main.py`: Flask aplikácia, routy, uploady, štatistiky, autentifikácia.
 - `models.py`: SQLAlchemy modely (`User`, `Book`, `PageLog`).
@@ -81,4 +83,14 @@ prehľad štatistík. Postavené na Flasku a SQLite, s čistým HTML/CSS a
 - Odporúčané: `Flask-Talisman` pre bezpečnostné hlavičky, `Flask-Limiter`
 	pre rate limiting, `Sentry` pre chybové reporty.
 
-Poznámka pre uživateľa: pri vytváraní účtu a prihlasovaní sa zadáva email, ten však slúži iba ako unikátny identifikátor
+Príspevky: Ak nájdete chybu alebo máte nápad na vylepšenie, neváhajte otvoriť "Issue" alebo poslať "Pull Request".
+
+## Licencia
+Tento projekt je publikovaný pod licenciou **CC BY-NC 4.0 (Creative Commons Attribution-NonCommercial)**.
+
+### Podmienky používania:
+* **Uvedenie pôvodu:** Musíte uviesť autora projektu (**gregusova**, 2026) a v prípade šírenia poskytnúť odkaz na túto licenciu.
+* **Nekomerčné použitie:** Tento projekt, jeho kód a pridružená grafika (ikony) nesmú byť použité na komerčné účely.
+* **Zdieľanie za rovnakých podmienok:** Ak projekt upravíte alebo na ňom staviate, musíte svoje príspevky šíriť pod rovnakou licenciou.
+
+Plné znenie licencie nájdete na: [Creative Commons BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/deed.sk)
